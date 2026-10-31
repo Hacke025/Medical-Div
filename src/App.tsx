@@ -61,10 +61,42 @@ function App() {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [formName, setFormName] = useState("");
   const [formReason, setFormReason] = useState("");
+  const [profileSaved, setProfileSaved] = useState(false);
+  const [profile, setProfile] = useState(() => {
+    try {
+      const saved = localStorage.getItem("careway-demo-profile");
+      return saved ? JSON.parse(saved) : { communication: "No preference selected", visitFormat: "No preference selected", accommodation: "" };
+    } catch {
+      return { communication: "No preference selected", visitFormat: "No preference selected", accommodation: "" };
+    }
+  });
 
   useEffect(() => {
     localStorage.setItem("careway-preferences", JSON.stringify(preferences));
   }, [preferences]);
+
+  useEffect(() => {
+    if (!settingsOpen) return;
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setSettingsOpen(false);
+    }
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [settingsOpen]);
+
+  function saveProfile(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    localStorage.setItem("careway-demo-profile", JSON.stringify(profile));
+    setProfileSaved(true);
+    setAnnouncement("Your demo accessibility preferences were saved in this browser.");
+  }
+
+  function clearProfile() {
+    const emptyProfile = { communication: "No preference selected", visitFormat: "No preference selected", accommodation: "" };
+    setProfile(emptyProfile);
+    localStorage.removeItem("careway-demo-profile");
+    setProfileSaved(false);
+  }
 
   const filteredArticles = useMemo(
     () => articles.filter((article) =>
@@ -133,6 +165,7 @@ function App() {
           <nav className={menuOpen ? "main-nav open" : "main-nav"} aria-label="Main navigation">
             <a href="#resources" onClick={() => setMenuOpen(false)}>Explore resources</a>
             <a href="#prepare" onClick={() => setMenuOpen(false)}>Prepare for a visit</a>
+            <a href="#profile" onClick={() => setMenuOpen(false)}>My access profile</a>
             <a href="#about" onClick={() => setMenuOpen(false)}>About</a>
             <button className="nav-accessibility" onClick={() => setSettingsOpen(true)}><Accessibility size={17} /> Accessibility</button>
           </nav>
@@ -212,6 +245,33 @@ function App() {
                   <button className="button button-primary form-submit" type="submit">Create my sample plan <ArrowRight size={16} /></button>
                 </form>}
             </div>
+          </div>
+        </section>
+
+        <section className="profile-section section-pad" id="profile">
+          <div className="container profile-grid">
+            <div>
+              <div className="eyebrow">YOUR PREFERENCES, YOUR CONTROL</div>
+              <h2>Build a simple access profile.</h2>
+              <p>Keep track of communication and visit preferences you may want to discuss with a healthcare office. This prototype stores these demo preferences only in this browser; it does not send them anywhere.</p>
+              <div className="profile-callout"><ShieldCheck size={18} /><span><b>Privacy note</b><br />Do not enter diagnoses, medication details, insurance numbers, or other sensitive health information. Browser storage is not a secure medical record.</span></div>
+            </div>
+            <form className="demo-form-card profile-form" onSubmit={saveProfile}>
+              <div className="form-card-heading"><span className="form-icon"><Accessibility size={20} /></span><div><h3>Accessibility preferences</h3><p>Optional demo profile</p></div></div>
+              <label htmlFor="communication-preference">Preferred communication</label>
+              <select id="communication-preference" value={profile.communication} onChange={(event) => { setProfile({ ...profile, communication: event.target.value }); setProfileSaved(false); }}>
+                <option>No preference selected</option><option>Written instructions</option><option>Spoken explanation</option><option>Text or email communication</option><option>Interpreter or communication support</option><option>Other / prefer to discuss</option>
+              </select>
+              <label htmlFor="visit-format">Visit format preference</label>
+              <select id="visit-format" value={profile.visitFormat} onChange={(event) => { setProfile({ ...profile, visitFormat: event.target.value }); setProfileSaved(false); }}>
+                <option>No preference selected</option><option>In-person</option><option>Video appointment</option><option>Phone appointment</option><option>Depends on the appointment</option><option>Prefer to discuss</option>
+              </select>
+              <label htmlFor="accommodation-preference">Accommodation reminder <span>(optional)</span></label>
+              <textarea id="accommodation-preference" rows={3} maxLength={240} value={profile.accommodation} onChange={(event) => { setProfile({ ...profile, accommodation: event.target.value }); setProfileSaved(false); }} placeholder="Example: Ask the office what accessible check-in options are available." />
+              <p className="privacy-note"><ShieldCheck size={15} /> This is a personal reminder, not a request sent to a provider.</p>
+              <div className="profile-actions"><button className="text-button" type="button" onClick={clearProfile}>Clear profile</button><button className="button button-primary" type="submit">{profileSaved ? "Saved" : "Save preferences"} <Check size={16} /></button></div>
+              {profileSaved && <p className="saved-message" role="status">Saved in this browser. You can edit or clear it at any time.</p>}
+            </form>
           </div>
         </section>
 
