@@ -160,3 +160,30 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 .journey-card:focus-visible,.question-topic:focus-within{outline:3px solid var(--focus,#6b63b5);outline-offset:3px}
 @media(max-width:850px){.journey-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.questions-layout{grid-template-columns:1fr;gap:24px}}
 @media(max-width:520px){.journey-grid,.question-topic-grid{grid-template-columns:1fr}.journey-card{min-height:0}}
+
+
+/* Quick accessibility setup cards */
+.preset-help{font-size:11px;line-height:1.6;color:#77877d;margin:9px 0 12px}
+.preset-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.preset-grid button{min-height:46px;padding:11px 12px;border:1px solid #dce8df;border-radius:10px;background:#f7faf7;color:#315b49;font-size:12px;font-weight:700;text-align:left}
+.preset-grid button:hover{border-color:#4c9272;background:#edf6ef}
+.preset-grid button:focus-visible{outline:3px solid #d77d36;outline-offset:3px}
+.contrast-high .preset-grid button{background:#fff;color:#000;border:2px solid #000}
+.contrast-dark .preset-grid button{background:#17231e;color:#f2f6f3;border-color:#53665b}
+.contrast-dark .preset-help{color:#c2d0c8}
+
+/* Mobile-first touch and reading improvements */
+button,a,select,input[type="checkbox"]{touch-action:manipulation}
+@media(max-width:680px){
+  .main-nav>a,.main-nav button{min-height:44px;display:flex;align-items:center}
+  .mobile-menu-button{width:44px;height:44px}
+  .button,.text-button,.icon-button{min-height:44px}
+  .demo-form-card{padding:19px 16px}
+  .demo-form-card input:not([type="checkbox"]),.demo-form-card textarea,.demo-form-card select,.search-box input{font-size:16px;min-height:44px}
+  .checklist-item{min-height:54px;font-size:13px}
+  .need-option{min-height:54px}
+  .floating-accessibility{min-height:46px;max-width:calc(100vw - 24px)}
+  .preset-grid{grid-template-columns:1fr}
+  .settings-panel{padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+  .voice-panel{padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+}
