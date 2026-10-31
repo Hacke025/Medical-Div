@@ -5,6 +5,13 @@ import {
 } from "lucide-react";
 
 type ContrastMode = "standard" | "high" | "dark";
+type AccessProfile = {
+  communication: string;
+  visitFormat: string;
+  accommodation: string;
+  accessNeeds: string[];
+};
+
 type Preferences = {
   fontScale: number;
   contrast: ContrastMode;
@@ -71,7 +78,7 @@ function App() {
   const [completedTasks, setCompletedTasks] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem("careway-checklist") || "[]"); } catch { return []; }
   });
-  const [profile, setProfile] = useState(() => {
+  const [profile, setProfile] = useState<AccessProfile>(() => {
     try {
       const saved = localStorage.getItem("careway-demo-profile");
       return saved ? { communication: "No preference selected", visitFormat: "No preference selected", accommodation: "", accessNeeds: [], ...JSON.parse(saved) } : { communication: "No preference selected", visitFormat: "No preference selected", accommodation: "", accessNeeds: [] };
@@ -446,7 +453,7 @@ function App() {
       <footer className="site-footer"><div className="container footer-inner"><a className="brand footer-brand" href="#home"><span className="brand-mark"><HeartPulse size={19} /></span><span>careway<span className="brand-period">.</span></span></a><p>Accessibility is a journey. This prototype is a starting point.</p><span>© 2026 Careway Demo</span></div></footer>
 
       <button className="floating-accessibility" onClick={() => setSettingsOpen(true)} aria-label="Open accessibility settings"><Accessibility size={23} /><span>Accessibility</span></button>
-      <button className="floating-voice" onClick={() => setVoiceOpen(!voiceOpen)} aria-label={voiceOpen ? "Close voice assistant" : "Open voice assistant"} title="Talk to Careway"><Mic size={21} /></button>
+      <button className="floating-voice" onClick={() => { if (voiceOpen) stopVoiceRecognition(); setVoiceOpen(!voiceOpen); }} aria-label={voiceOpen ? "Close voice assistant" : "Open voice assistant"} title="Talk to Careway"><Mic size={21} /></button>
       {voiceOpen && <div className="voice-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) { setVoiceOpen(false); stopVoiceRecognition(); } }}>
         <section className="voice-panel" role="dialog" aria-modal="false" aria-labelledby="voice-title">
           <div className="settings-header"><div><div className="eyebrow">HANDS-FREE NAVIGATION</div><h2 id="voice-title">Talk to Careway</h2></div><button className="icon-button" onClick={() => { setVoiceOpen(false); stopVoiceRecognition(); }} aria-label="Close voice commands"><X /></button></div>
