@@ -305,3 +305,51 @@ button,a,select,input[type="checkbox"]{touch-action:manipulation}
 .contrast-dark .document-upload-card>p,.contrast-dark .document-block p,.contrast-dark .document-findings p,.contrast-dark .document-stats{color:#c2d0c8}
 .contrast-dark .document-block summary{background:#293d34}
 @media(max-width:760px){.document-reader-grid{grid-template-columns:1fr}.document-upload-card,.document-content-card{padding:17px}.document-actions .button{width:100%;justify-content:center}}
+
+
+/* Language support and printable appointment pack */
+.language-section{background:#f5f8f5}
+.language-panel{background:#fff;border:1px solid #e0eae2;border-radius:16px;padding:23px}
+.language-panel>label{display:block;font-size:12px;font-weight:800;color:#315747;margin-bottom:8px}
+.language-panel select{width:100%;max-width:320px;min-height:46px;border:1px solid #d9e5dc;border-radius:9px;background:#fff;padding:10px 12px;font-size:14px;color:#28483a}
+.phrase-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:18px}
+.phrase-card{border:1px solid #e2ebe4;border-radius:11px;padding:14px;background:#fbfdfb}
+.phrase-card b{font-size:11px;color:#4e8064}
+.phrase-card p{font-size:13px;line-height:1.6;color:#365747;margin:7px 0 0}
+.appointment-pack-section{background:#fff}
+.pack-preview{max-width:900px;margin:0 auto;padding:30px;border:1px solid #dce7df;border-radius:14px;background:#fff;color:#263b30;box-shadow:0 8px 28px #1c47300a}
+.pack-title-row{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;padding-bottom:18px;border-bottom:2px solid #477c5e}
+.pack-brand{font-size:10px;letter-spacing:2px;font-weight:900;color:#4b8062}
+.pack-title-row h2{font-size:24px;line-height:1.2;margin:8px 0;color:#29483a}
+.pack-title-row p{font-size:12px;color:#66786d;margin:0}
+.pack-language{padding:7px 10px;border-radius:20px;background:#edf5ee;color:#477c5e;font-size:9px;font-weight:900;letter-spacing:1px}
+.pack-columns{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0}
+.pack-block{padding:15px;border:1px solid #e1eae3;border-radius:10px;break-inside:avoid}
+.pack-block h3{font-size:13px;color:#315747;margin:0 0 10px}
+.pack-block p{font-size:11px;line-height:1.65;color:#4e6256;margin:6px 0;overflow-wrap:anywhere}
+.pack-questions{margin-bottom:14px}
+.pack-block ol,.pack-block ul{padding-left:20px;margin:8px 0}
+.pack-block li{font-size:11px;line-height:1.65;color:#4e6256;margin:5px 0}
+.pack-check{display:inline-block;width:17px;color:#718078;font-weight:800}
+.pack-check.done{color:#32805b}
+.pack-footer{border-top:1px solid #e3ebe5;padding-top:12px;margin:16px 0 0;font-size:10px;line-height:1.6;color:#738078}
+.pack-actions{display:flex;align-items:center;justify-content:center;gap:18px;margin:18px 0}
+.contrast-high .language-section,.contrast-high .language-panel,.contrast-high .phrase-card{background:#fff;color:#000;border:2px solid #000}
+.contrast-high .phrase-card b,.contrast-high .phrase-card p,.contrast-high .language-panel>label{color:#000}
+.contrast-dark .language-section{background:#192923}
+.contrast-dark .language-panel,.contrast-dark .phrase-card{background:#202f2a;border-color:#53665b}
+.contrast-dark .language-panel>label,.contrast-dark .phrase-card b,.contrast-dark .phrase-card p{color:#f2f6f3}
+.contrast-dark .language-panel select{background:#17231e;color:#fff;border-color:#53665b}
+@media(max-width:760px){.phrase-grid{grid-template-columns:1fr 1fr}.pack-preview{padding:18px}.pack-columns{grid-template-columns:1fr}}
+@media(max-width:520px){.phrase-grid{grid-template-columns:1fr}.pack-title-row h2{font-size:20px}.pack-actions{flex-direction:column}.pack-actions .button{width:100%;justify-content:center}}
+@media print{
+  @page{size:auto;margin:14mm}
+  body *{visibility:hidden!important}
+  #appointment-pack,#appointment-pack *{visibility:visible!important}
+  #appointment-pack{position:absolute!important;left:0!important;top:0!important;width:100%!important;padding:0!important;margin:0!important;background:#fff!important}
+  #appointment-pack .container{width:100%!important;max-width:none!important;padding:0!important}
+  #appointment-pack .pack-screen-heading,#appointment-pack .pack-actions,#appointment-pack .glossary-note{display:none!important}
+  #appointment-pack .pack-preview{max-width:none!important;border:0!important;box-shadow:none!important;padding:0!important}
+  #appointment-pack .pack-block{break-inside:avoid}
+  #appointment-pack .pack-title-row h2,#appointment-pack .pack-block h3,#appointment-pack .pack-block p,#appointment-pack .pack-block li,#appointment-pack .pack-title-row p,#appointment-pack .pack-footer{color:#111!important}
+}
