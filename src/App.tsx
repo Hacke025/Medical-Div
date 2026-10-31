@@ -81,6 +81,9 @@ function App() {
   const [noticeText, setNoticeText] = useState("");
   const [noticeSentences, setNoticeSentences] = useState<string[]>([]);
   const [noticeDetails, setNoticeDetails] = useState<string[]>([]);
+  const [documentName, setDocumentName] = useState("");
+  const [documentText, setDocumentText] = useState("");
+  const [documentError, setDocumentError] = useState("");
   const [questionTopics, setQuestionTopics] = useState<string[]>(["Understanding next steps"]);
   const [questionNotes, setQuestionNotes] = useState("");
   const [questionsCopied, setQuestionsCopied] = useState(false);
@@ -334,6 +337,59 @@ function App() {
     setNoticeDetails(found);
     setAnnouncement("Your text has been organized in this browser. Check every detail against the original message.");
   }
+  async function handleDocumentUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const extension = file.name.split(".").pop()?.toLowerCase();
+    if (!["txt", "md"].includes(extension || "")) {
+      setDocumentError("For this prototype, upload a plain text (.txt) or Markdown (.md) file. PDF and scanned-image support is not available yet.");
+      event.target.value = "";
+      return;
+    }
+    if (file.size > 1024 * 1024) {
+      setDocumentError("This demo accepts files up to 1 MB.");
+      event.target.value = "";
+      return;
+    }
+    try {
+      const content = await file.text();
+      if (!content.trim()) { setDocumentError("That file appears to be empty. Choose another file."); return; }
+      setDocumentName(file.name);
+      setDocumentText(content.slice(0, 30000));
+      setDocumentError("");
+      setAnnouncement("Document loaded in this browser. Review the original before acting on any information.");
+    } catch {
+      setDocumentError("Careway couldn't read that file. Try saving a plain text copy and uploading it again.");
+    }
+    event.target.value = "";
+  }
+  function clearDocument() {
+    setDocumentName(""); setDocumentText(""); setDocumentError("");
+    window.speechSynthesis?.cancel();
+  }
+  function readDocument() {
+    if (!documentText || !("speechSynthesis" in window)) { setAnnouncement("There is no document text to read, or text-to-speech is unavailable."); return; }
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(new SpeechSynthesisUtterance(documentText.replace(/[#*_]/g, " ")));
+    setAnnouncement("Reading the uploaded document aloud.");
+  }
+  const documentBlocks = documentText.split(/\n\s*\n/).map((block) => block.trim()).filter(Boolean).map((block, index) => {
+    const lines = block.split("\n").map((line) => line.trim()).filter(Boolean);
+    const first = lines[0] || "";
+    const heading = first.match(/^#{1,3}\s+(.+)$/)?.[1] || (lines.length > 1 && first.length < 90 && (first.endsWith(":") || first === first.toUpperCase()) ? first.replace(/:$/, "") : "");
+    const body = heading ? lines.slice(1).join(" ") : block.replace(/\n/g, " ");
+    return { heading: heading || "Section " + (index + 1), body: body || (heading ? "This heading has no text beneath it." : block.replace(/\n/g, " ")) };
+  });
+  const documentHighlights = [
+    { label: "Dates and times", pattern: /\b(?:\d{1,2}\s)?(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2}(?:,?\s+\d{4})?|\b\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?|\b\d{1,2}:\d{2}\s?(?:AM|PM)?\b/gi },
+    { label: "Amounts", pattern: /\$\s?\d+(?:,\d{3})*(?:\.\d{2})?/g },
+    { label: "Action phrases", pattern: /\b(?:call|contact|bring|complete|submit|confirm|schedule|reschedule|arrive|reply|return|sign|pay)\b[^.!?]*/gi },
+  ];
+  const documentFindings = documentHighlights.flatMap(({ label, pattern }) => {
+    const matches = documentText.match(pattern);
+    return matches?.length ? [{ label, values: [...new Set(matches)].slice(0, 8) }] : [];
+  });
+
   function readNotice() {
     if (!noticeSentences.length || !("speechSynthesis" in window)) {
       setAnnouncement("There is no organized text to read, or text-to-speech is unavailable.");
@@ -497,6 +553,36 @@ function App() {
               </div>
             </div>
             <p className="glossary-note">This is a reading aid, not an AI interpretation or a source of medical advice. Always rely on the original message and contact its sender if anything is unclear.</p>
+          </div>
+        </section>
+
+        <section className="document-reader-section section-pad" id="document-reader">
+          <div className="container">
+            <div className="section-heading">
+              <div><div className="eyebrow">DOCUMENT READER</div><h2>Bring a document into clearer view.</h2><p>Upload a text-based notice or instruction sheet. Careway separates it into sections, spots details worth checking, and can read it aloud.</p></div>
+              <span className="innovation-tag"><FileText size={15}/> On-device reading aid</span>
+            </div>
+            <div className="document-reader-grid">
+              <div className="document-upload-card">
+                <span className="innovation-icon"><FileText size={22}/></span><h3>Choose a document</h3>
+                <p>Supported formats: .txt and .md, up to 1 MB. PDF, photos, and scanned documents are not supported in this version.</p>
+                <label className="button button-primary document-upload-button" htmlFor="document-upload">Choose text file <ArrowRight size={16}/></label>
+                <input className="sr-only" id="document-upload" type="file" accept=".txt,.md,text/plain,text/markdown" onChange={handleDocumentUpload}/>
+                {documentError && <p className="document-error" role="alert">{documentError}</p>}
+                {documentName && <div className="document-file" role="status"><Check size={16}/><span><b>{documentName}</b><small>{documentText.length.toLocaleString()} characters loaded</small></span></div>}
+                <p className="privacy-note"><ShieldCheck size={15}/> The file is read locally in your browser. It is not uploaded to a Careway server or saved after you leave this page. Still, avoid using documents with names, dates of birth, account numbers, diagnoses, or other private details in this demo.</p>
+                {documentText && <div className="document-actions"><button className="button button-secondary" type="button" onClick={readDocument}><Volume2 size={16}/> Read aloud</button><button className="text-button" type="button" onClick={clearDocument}>Remove document</button></div>}
+              </div>
+              <div className="document-content-card" aria-live="polite">
+                <div className="reading-output-heading"><BookOpen size={19}/><b>{documentName ? "Document overview" : "Your document overview"}</b></div>
+                {!documentText ? <p className="reading-empty">After you choose a supported file, its sections and details to double-check will appear here.</p> : <>
+                  <div className="document-stats"><span><b>{documentBlocks.length}</b> sections or paragraphs</span><span><b>{documentText.trim().split(/\s+/).filter(Boolean).length}</b> words</span></div>
+                  <div className="document-blocks">{documentBlocks.map((block, index) => <details className="document-block" key={index} open={index === 0}><summary>{block.heading}</summary><p>{block.body}</p></details>)}</div>
+                  {documentFindings.length > 0 && <div className="document-findings"><b>Details to verify in the original</b>{documentFindings.map((finding) => <div key={finding.label}><strong>{finding.label}</strong><p>{finding.values.join(" · ")}</p></div>)}</div>}
+                </>}
+              </div>
+            </div>
+            <p className="glossary-note">Careway does not determine what a document means, check whether it is authentic, or confirm that a deadline or instruction is correct. Use the original document and contact its sender when anything is unclear.</p>
           </div>
         </section>
 
