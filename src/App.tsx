@@ -62,6 +62,14 @@ function App() {
   const [formName, setFormName] = useState("");
   const [formReason, setFormReason] = useState("");
   const [profileSaved, setProfileSaved] = useState(false);
+  const [voiceOpen, setVoiceOpen] = useState(false);
+  const [voiceListening, setVoiceListening] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState("");
+  const [voiceStatus, setVoiceStatus] = useState("Choose Start listening and allow microphone access when your browser asks.");
+  const [glossaryQuery, setGlossaryQuery] = useState("");
+  const [completedTasks, setCompletedTasks] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem("careway-checklist") || "[]"); } catch { return []; }
+  });
   const [profile, setProfile] = useState(() => {
     try {
       const saved = localStorage.getItem("careway-demo-profile");
@@ -129,6 +137,97 @@ function App() {
     setAnnouncement("Reading stopped.");
   }
 
+  const checklistItems = [
+    "Write down the main questions I want to ask",
+    "Check the appointment time, location, and travel plan",
+    "Ask the office about accessibility options I may need",
+    "Check whether forms can be completed in advance",
+    "Prepare a list of topics to discuss (avoid storing sensitive details here)",
+    "Ask how to receive follow-up instructions in an accessible format",
+  ];
+
+  const glossary = [
+    { term: "Referral", meaning: "A request from one healthcare professional for you to see another professional or service." },
+    { term: "Co-pay", meaning: "A set amount you may have to pay for a covered service. The amount depends on your plan." },
+    { term: "Deductible", meaning: "The amount your plan says you pay for certain covered services before the plan begins paying its share." },
+    { term: "Prior authorization", meaning: "A decision your health plan may require before it agrees to cover a service or medicine." },
+    { term: "Informed consent", meaning: "A process where a provider explains a proposed procedure or treatment, including important benefits and risks, so you can make a decision." },
+    { term: "Discharge instructions", meaning: "Information given when you leave a healthcare facility. It may explain follow-up steps, warning signs, and who to contact with questions." },
+    { term: "Medical record", meaning: "A collection of information about care you have received. You can ask a provider how to access or correct your record." },
+    { term: "Accessibility accommodation", meaning: "A change or support that helps a person access a service or communicate. Availability depends on the setting and request." },
+  ];
+
+  function runVoiceCommand(rawCommand: string) {
+    const command = rawCommand.toLowerCase().replace(/[^a-z0-9 ]/g, "").trim();
+    setVoiceTranscript(rawCommand);
+    if (/increase text|bigger text|larger text|text up/.test(command)) {
+      updatePreference("fontScale", Math.min(1.5, +(preferences.fontScale + 0.1).toFixed(1)));
+      setVoiceStatus("Text size increased.");
+    } else if (/decrease text|smaller text|text down/.test(command)) {
+      updatePreference("fontScale", Math.max(0.9, +(preferences.fontScale - 0.1).toFixed(1)));
+      setVoiceStatus("Text size decreased.");
+    } else if (/high contrast/.test(command)) {
+      updatePreference("contrast", "high"); setVoiceStatus("High contrast enabled.");
+    } else if (/dark mode|dark theme/.test(command)) {
+      updatePreference("contrast", "dark"); setVoiceStatus("Dark mode enabled.");
+    } else if (/standard mode|normal colors|light mode/.test(command)) {
+      updatePreference("contrast", "standard"); setVoiceStatus("Standard colors enabled.");
+    } else if (/open accessibility|accessibility settings/.test(command)) {
+      setSettingsOpen(true); setVoiceStatus("Accessibility settings opened.");
+    } else if (/close settings|close accessibility/.test(command)) {
+      setSettingsOpen(false); setVoiceStatus("Accessibility settings closed.");
+    } else if (/read page|read this page|start reading/.test(command)) {
+      speakPage(); setVoiceStatus("Reading the page aloud.");
+    } else if (/stop reading|stop speaking/.test(command)) {
+      stopSpeaking(); setVoiceStatus("Reading stopped.");
+    } else if (/go to resources|open resources|show guides/.test(command)) {
+      document.getElementById("resources")?.scrollIntoView({ behavior: preferences.reducedMotion ? "auto" : "smooth" }); setVoiceStatus("Showing healthcare guides.");
+    } else if (/go to appointment|appointment preparation|prepare for visit/.test(command)) {
+      document.getElementById("prepare")?.scrollIntoView({ behavior: preferences.reducedMotion ? "auto" : "smooth" }); setVoiceStatus("Showing appointment preparation.");
+    } else if (/open profile|go to profile|access profile/.test(command)) {
+      document.getElementById("profile")?.scrollIntoView({ behavior: preferences.reducedMotion ? "auto" : "smooth" }); setVoiceStatus("Showing your access profile.");
+    } else if (/go to glossary|open glossary|healthcare terms/.test(command)) {
+      document.getElementById("glossary")?.scrollIntoView({ behavior: preferences.reducedMotion ? "auto" : "smooth" }); setVoiceStatus("Showing the healthcare glossary.");
+    } else if (/scroll down/.test(command)) {
+      window.scrollBy({ top: window.innerHeight * 0.75, behavior: preferences.reducedMotion ? "auto" : "smooth" }); setVoiceStatus("Scrolling down.");
+    } else if (/scroll up/.test(command)) {
+      window.scrollBy({ top: -window.innerHeight * 0.75, behavior: preferences.reducedMotion ? "auto" : "smooth" }); setVoiceStatus("Scrolling up.");
+    } else if (/help|what can i say|commands/.test(command)) {
+      setVoiceOpen(true); setVoiceStatus("Try: increase text, dark mode, high contrast, read page, go to resources, or open profile.");
+    } else {
+      setVoiceStatus("I didn't recognize that command. Select Help to see examples.");
+    }
+  }
+
+  function startVoiceRecognition() {
+    const browserWindow = window as Window & { SpeechRecognition?: new () => any; webkitSpeechRecognition?: new () => any };
+    const Recognition = browserWindow.SpeechRecognition || browserWindow.webkitSpeechRecognition;
+    if (!Recognition) {
+      setVoiceStatus("Voice recognition is not supported in this browser. Try a recent version of Chrome or Edge, or use the buttons and settings instead.");
+      return;
+    }
+    const recognition = new Recognition();
+    recognition.lang = "en-US";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.onstart = () => { setVoiceListening(true); setVoiceStatus("Listening. Say a command clearly."); };
+    recognition.onresult = (event: any) => runVoiceCommand(event.results[0][0].transcript);
+    recognition.onerror = (event: any) => {
+      setVoiceStatus(event.error === "not-allowed" ? "Microphone permission was blocked. Allow microphone access in your browser settings." : "Voice input had a problem (" + event.error + "). Try again or use the on-screen controls.");
+      setVoiceListening(false);
+    };
+    recognition.onend = () => setVoiceListening(false);
+    try { recognition.start(); } catch { setVoiceListening(false); setVoiceStatus("The microphone could not start. Please try again."); }
+  }
+
+  function toggleChecklist(item: string) {
+    setCompletedTasks((current) => {
+      const next = current.includes(item) ? current.filter((entry) => entry !== item) : [...current, item];
+      localStorage.setItem("careway-checklist", JSON.stringify(next));
+      return next;
+    });
+  }
+
   function submitDemoForm(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormSubmitted(true);
@@ -166,6 +265,7 @@ function App() {
             <a href="#resources" onClick={() => setMenuOpen(false)}>Explore resources</a>
             <a href="#prepare" onClick={() => setMenuOpen(false)}>Prepare for a visit</a>
             <a href="#profile" onClick={() => setMenuOpen(false)}>My access profile</a>
+            <a href="#glossary" onClick={() => setMenuOpen(false)}>Healthcare glossary</a>
             <a href="#about" onClick={() => setMenuOpen(false)}>About</a>
             <button className="nav-accessibility" onClick={() => setSettingsOpen(true)}><Accessibility size={17} /> Accessibility</button>
           </nav>
@@ -248,6 +348,25 @@ function App() {
           </div>
         </section>
 
+        <section className="checklist-section section-pad" id="checklist">
+          <div className="container">
+            <div className="section-heading"><div><div className="eyebrow">A PRACTICAL VISIT PLANNER</div><h2>Your appointment checklist.</h2><p>Mark the preparation steps that are useful to you. Your checklist stays in this browser and is not sent to a clinic.</p></div><div className="checklist-progress"><b>{completedTasks.length} / {checklistItems.length}</b><span>steps completed</span><div className="progress-track"><span style={{width: (completedTasks.length / checklistItems.length * 100) + "%"}} /></div></div></div>
+            <div className="checklist-card">{checklistItems.map((item) => <label className="checklist-item" key={item}><input type="checkbox" checked={completedTasks.includes(item)} onChange={() => toggleChecklist(item)} /><span className="custom-check"><Check size={14} /></span><span>{item}</span></label>)}
+              <button className="text-button" onClick={() => { setCompletedTasks([]); localStorage.removeItem("careway-checklist"); }}>Reset checklist</button>
+            </div>
+          </div>
+        </section>
+
+        <section className="glossary-section section-pad" id="glossary">
+          <div className="container">
+            <div className="section-heading"><div><div className="eyebrow">HEALTHCARE, IN PLAIN LANGUAGE</div><h2>A glossary without the jargon.</h2><p>Search common healthcare and insurance terms. These are general explanations; details can vary by provider and plan.</p></div><label className="search-box"><Search size={18} /><span className="sr-only">Search healthcare terms</span><input value={glossaryQuery} onChange={(event) => setGlossaryQuery(event.target.value)} placeholder="Search a term..." /></label></div>
+            <div className="glossary-grid">{glossary.filter((entry) => (entry.term + " " + entry.meaning).toLowerCase().includes(glossaryQuery.toLowerCase())).map((entry) => <article className="glossary-card" key={entry.term}><h3>{entry.term}</h3><p>{entry.meaning}</p></article>)}
+              {glossary.filter((entry) => (entry.term + " " + entry.meaning).toLowerCase().includes(glossaryQuery.toLowerCase())).length === 0 && <p>No matching terms. Try another search.</p>}
+            </div>
+            <p className="glossary-note">If a term appears in your own paperwork, ask the organization that sent it to explain how it applies to your situation.</p>
+          </div>
+        </section>
+
         <section className="profile-section section-pad" id="profile">
           <div className="container profile-grid">
             <div>
@@ -281,6 +400,17 @@ function App() {
       <footer className="site-footer"><div className="container footer-inner"><a className="brand footer-brand" href="#home"><span className="brand-mark"><HeartPulse size={19} /></span><span>careway<span className="brand-period">.</span></span></a><p>Accessibility is a journey. This prototype is a starting point.</p><span>© 2026 Careway Demo</span></div></footer>
 
       <button className="floating-accessibility" onClick={() => setSettingsOpen(true)} aria-label="Open accessibility settings"><Accessibility size={23} /><span>Accessibility</span></button>
+      <button className="floating-voice" onClick={() => setVoiceOpen(true)} aria-label="Open voice commands"><Mic size={20} /><span>Talk to Careway</span></button>
+      {voiceOpen && <div className="voice-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setVoiceOpen(false); }}>
+        <section className="voice-panel" role="dialog" aria-modal="true" aria-labelledby="voice-title">
+          <div className="settings-header"><div><div className="eyebrow">HANDS-FREE NAVIGATION</div><h2 id="voice-title">Talk to Careway</h2></div><button className="icon-button" onClick={() => setVoiceOpen(false)} aria-label="Close voice commands"><X /></button></div>
+          <p className="settings-intro">Tap Start listening, allow microphone access, then say one command. Voice recognition depends on your browser and may send audio to its speech service.</p>
+          <div className="voice-status" role="status" aria-live="polite"><span className={voiceListening ? "voice-pulse active" : "voice-pulse"}><Mic size={20} /></span><div><b>{voiceListening ? "Listening now..." : "Voice assistant"}</b><small>{voiceStatus}</small></div></div>
+          {voiceTranscript && <p className="voice-transcript"><b>Heard:</b> “{voiceTranscript}”</p>}
+          <button className="button button-primary voice-start" onClick={startVoiceRecognition} disabled={voiceListening}><Mic size={17} /> {voiceListening ? "Listening..." : "Start listening"}</button>
+          <div className="voice-command-list"><b>Commands you can try</b><ul><li>“Increase text” / “Decrease text”</li><li>“Dark mode” / “High contrast” / “Standard mode”</li><li>“Read page” / “Stop reading”</li><li>“Open accessibility settings”</li><li>“Go to resources” / “Prepare for visit”</li><li>“Open profile” / “Go to glossary”</li><li>“Scroll down” / “Scroll up” / “Help”</li></ul></div>
+        </section>
+      </div>}
       {announcement && <div className="sr-only" role="status" aria-live="polite">{announcement}</div>}
 
       {settingsOpen && <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setSettingsOpen(false); }}>
