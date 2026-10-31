@@ -111,7 +111,7 @@ function App() {
   useEffect(() => {
     if (!settingsOpen && !voiceOpen && !menuOpen) return;
     function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") { setSettingsOpen(false); setVoiceOpen(false); stopVoiceRecognition(); }
+      if (event.key === "Escape") { setSettingsOpen(false); setVoiceOpen(false); setMenuOpen(false); stopVoiceRecognition(); }
     }
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
@@ -286,7 +286,7 @@ function App() {
   };
   const suggestedQuestions = questionTopics.flatMap((topic) => questionBank[topic] || []);
   async function copyQuestionList() {
-    const content = "Questions I may want to ask\\n\\n" + suggestedQuestions.map((q) => "• " + q).join("\\n") + (questionNotes.trim() ? "\\n\\nMy note: " + questionNotes.trim() : "");
+    const content = "Questions I may want to ask\n\n" + suggestedQuestions.map((q) => "• " + q).join("\n") + (questionNotes.trim() ? "\n\nMy note: " + questionNotes.trim() : "");
     try {
       await navigator.clipboard.writeText(content);
       setQuestionsCopied(true);
@@ -465,17 +465,17 @@ function App() {
             <span className="brand-mark"><HeartPulse size={22} /></span>
             <span>careway<span className="brand-period">.</span><small>HEALTHCARE, MADE CLEARER</small></span>
           </a>
-          <button className="mobile-menu-button icon-button" onClick={() => setMenuOpen(!menuOpen)} aria-expanded={menuOpen} aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}>
+          <button className="mobile-menu-button icon-button" type="button" onClick={() => setMenuOpen((open) => !open)} aria-controls="primary-navigation" aria-expanded={menuOpen} aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}>
             {menuOpen ? <X /> : <Menu />}
           </button>
-          <nav className={menuOpen ? "main-nav open" : "main-nav"} aria-label="Main navigation">
+          <nav id="primary-navigation" className={menuOpen ? "main-nav open" : "main-nav"} aria-label="Main navigation">
             <a href="#resources" onClick={() => setMenuOpen(false)}>Explore</a>
             <a href="#reading-companion" onClick={() => setMenuOpen(false)}>Understand a message</a>
             <a href="#prepare" onClick={() => setMenuOpen(false)}>Prepare for care</a>
             <a href="#journey" onClick={() => setMenuOpen(false)}>All tools</a>
             <a href="#profile" onClick={() => setMenuOpen(false)}>My preferences</a>
             <a href="#language-support" onClick={() => setMenuOpen(false)}>Language support</a>
-            <button className="nav-accessibility" onClick={() => setSettingsOpen(true)}><Accessibility size={17} /> Accessibility</button>
+            <button className="nav-accessibility" type="button" onClick={() => { setMenuOpen(false); setSettingsOpen(true); }}><Accessibility size={17} /> Accessibility</button>
           </nav>
         </div>
       </header>
