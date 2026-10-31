@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Accessibility, ArrowRight, BookOpen, CalendarDays, Check, Clock3, FileText, HeartPulse, Menu, Mic, Minus, Plus,
-  Search, Settings2, ShieldCheck, Sparkles, Stethoscope, Type, Volume2, X
+  Search, Settings2, ShieldCheck, Sparkles, Stethoscope, Type, Volume2, X, Copy, Ear, Eye, Brain, Hand, MessageCircle, Heart
 } from "lucide-react";
 
 type ContrastMode = "standard" | "high" | "dark";
@@ -65,7 +65,8 @@ function App() {
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [voiceListening, setVoiceListening] = useState(false);
   const [voiceTranscript, setVoiceTranscript] = useState("");
-  const [voiceStatus, setVoiceStatus] = useState("Choose Start listening and allow microphone access when your browser asks.");
+  const [voiceStatus, setVoiceStatus] = useState("Tap the microphone, then say a command.");
+  const recognitionRef = useRef<any>(null);
   const [glossaryQuery, setGlossaryQuery] = useState("");
   const [completedTasks, setCompletedTasks] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem("careway-checklist") || "[]"); } catch { return []; }
@@ -73,15 +74,19 @@ function App() {
   const [profile, setProfile] = useState(() => {
     try {
       const saved = localStorage.getItem("careway-demo-profile");
-      return saved ? JSON.parse(saved) : { communication: "No preference selected", visitFormat: "No preference selected", accommodation: "" };
+      return saved ? { communication: "No preference selected", visitFormat: "No preference selected", accommodation: "", accessNeeds: [], ...JSON.parse(saved) } : { communication: "No preference selected", visitFormat: "No preference selected", accommodation: "", accessNeeds: [] };
     } catch {
-      return { communication: "No preference selected", visitFormat: "No preference selected", accommodation: "" };
+      return { communication: "No preference selected", visitFormat: "No preference selected", accommodation: "", accessNeeds: [] };
     }
   });
 
   useEffect(() => {
     localStorage.setItem("careway-preferences", JSON.stringify(preferences));
   }, [preferences]);
+
+  useEffect(() => {
+    return () => recognitionRef.current?.stop?.();
+  }, []);
 
   useEffect(() => {
     if (!settingsOpen && !voiceOpen) return;
@@ -100,7 +105,7 @@ function App() {
   }
 
   function clearProfile() {
-    const emptyProfile = { communication: "No preference selected", visitFormat: "No preference selected", accommodation: "" };
+    const emptyProfile = { communication: "No preference selected", visitFormat: "No preference selected", accommodation: "", accessNeeds: [] as string[] };
     setProfile(emptyProfile);
     localStorage.removeItem("careway-demo-profile");
     setProfileSaved(false);
@@ -199,6 +204,23 @@ function App() {
     }
   }
 
+  function stopVoiceRecognition() {
+    recognitionRef.current?.stop?.();
+    recognitionRef.current = null;
+    setVoiceListening(false);
+  }
+
+  async function copyAccessRequest() {
+    const needs = profile.accessNeeds?.length ? profile.accessNeeds.join(", ") : "I would like to discuss accessibility options.";
+    const message = "Hello, I am preparing for an appointment and would like to ask about accessibility arrangements.\n\nMy access preferences: " + needs + ".\nCommunication preference: " + profile.communication + ".\nVisit preference: " + profile.visitFormat + ".\nAdditional note: " + (profile.accommodation || "I would like to discuss available options.") + "\n\nPlease let me know what arrangements are available and whether you need any information from me in advance.";
+    try {
+      await navigator.clipboard.writeText(message);
+      setAnnouncement("Your sample accommodation request was copied. Review it and edit it before sending.");
+    } catch {
+      setAnnouncement("Copy is unavailable in this browser. You can select and copy the request manually if displayed.");
+    }
+  }
+
   function startVoiceRecognition() {
     const browserWindow = window as Window & { SpeechRecognition?: new () => any; webkitSpeechRecognition?: new () => any };
     const Recognition = browserWindow.SpeechRecognition || browserWindow.webkitSpeechRecognition;
@@ -207,6 +229,7 @@ function App() {
       return;
     }
     const recognition = new Recognition();
+    recognitionRef.current = recognition;
     recognition.lang = "en-US";
     recognition.continuous = false;
     recognition.interimResults = false;
@@ -216,8 +239,13 @@ function App() {
       setVoiceStatus(event.error === "not-allowed" ? "Microphone permission was blocked. Allow microphone access in your browser settings." : "Voice input had a problem (" + event.error + "). Try again or use the on-screen controls.");
       setVoiceListening(false);
     };
-    recognition.onend = () => setVoiceListening(false);
-    try { recognition.start(); } catch { setVoiceListening(false); setVoiceStatus("The microphone could not start. Please try again."); }
+    recognition.onend = () => { setVoiceListening(false); recognitionRef.current = null; };
+    try { recognition.start(); } catch { recognitionRef.current = null; setVoiceListening(false); setVoiceStatus("The microphone could not start. Please try again."); }
+  }
+
+  function toggleAccessNeed(need: string) {
+    setProfile((current: any) => ({ ...current, accessNeeds: (current.accessNeeds || []).includes(need) ? current.accessNeeds.filter((item: string) => item !== need) : [...(current.accessNeeds || []), need] }));
+    setProfileSaved(false);
   }
 
   function toggleChecklist(item: string) {
@@ -388,8 +416,25 @@ function App() {
               </select>
               <label htmlFor="accommodation-preference">Accommodation reminder <span>(optional)</span></label>
               <textarea id="accommodation-preference" rows={3} maxLength={240} value={profile.accommodation} onChange={(event) => { setProfile({ ...profile, accommodation: event.target.value }); setProfileSaved(false); }} placeholder="Example: Ask the office what accessible check-in options are available." />
-              <p className="privacy-note"><ShieldCheck size={15} /> This is a personal reminder, not a request sent to a provider.</p>
+              <div className="access-needs-picker">
+                <label>What might make a visit easier? <span>(select any that apply)</span></label>
+                <p>These are planning prompts, not diagnoses. You can leave everything unselected.</p>
+                <div className="access-needs-grid">
+                  {[
+                    ["Vision","Large print, screen-reader-friendly information, or verbal directions"],
+                    ["Hearing","Written instructions, captions, or an interpreter"],
+                    ["Mobility","Step-free access, accessible exam equipment, or extra time to move"],
+                    ["Communication","More time to respond, communication board, or support person"],
+                    ["Learning and memory","Plain-language steps, repetition, or written reminders"],
+                    ["Sensory needs","Quieter waiting area, reduced sensory stimulation, or predictable steps"],
+                    ["Dexterity","Help with forms, accessible touchscreens, or alternative input"],
+                    ["Fatigue or chronic conditions","Flexible scheduling, rest breaks, or shorter waiting where possible"]
+                  ].map(([name, detail]) => <label className="need-option" key={name}><input type="checkbox" checked={(profile.accessNeeds || []).includes(name)} onChange={() => toggleAccessNeed(name)} /><span className="need-check"><Check size={13}/></span><span><b>{name}</b><small>{detail}</small></span></label>)}
+                </div>
+              </div>
+              <p className="privacy-note"><ShieldCheck size={15} /> This is a personal planning aid, not a request sent to a provider. Don't enter sensitive medical details.</p>
               <div className="profile-actions"><button className="text-button" type="button" onClick={clearProfile}>Clear profile</button><button className="button button-primary" type="submit">{profileSaved ? "Saved" : "Save preferences"} <Check size={16} /></button></div>
+              <button className="button button-secondary request-copy" type="button" onClick={copyAccessRequest}><Copy size={15}/> Copy sample accommodation request</button>
               {profileSaved && <p className="saved-message" role="status">Saved in this browser. You can edit or clear it at any time.</p>}
             </form>
           </div>
@@ -401,15 +446,15 @@ function App() {
       <footer className="site-footer"><div className="container footer-inner"><a className="brand footer-brand" href="#home"><span className="brand-mark"><HeartPulse size={19} /></span><span>careway<span className="brand-period">.</span></span></a><p>Accessibility is a journey. This prototype is a starting point.</p><span>© 2026 Careway Demo</span></div></footer>
 
       <button className="floating-accessibility" onClick={() => setSettingsOpen(true)} aria-label="Open accessibility settings"><Accessibility size={23} /><span>Accessibility</span></button>
-      <button className="floating-voice" onClick={() => setVoiceOpen(true)} aria-label="Open voice commands"><Mic size={20} /><span>Talk to Careway</span></button>
+      <button className="floating-voice" onClick={() => setVoiceOpen(!voiceOpen)} aria-label={voiceOpen ? "Close voice assistant" : "Open voice assistant"} title="Talk to Careway"><Mic size={21} /></button>
       {voiceOpen && <div className="voice-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setVoiceOpen(false); }}>
-        <section className="voice-panel" role="dialog" aria-modal="true" aria-labelledby="voice-title">
+        <section className="voice-panel" role="dialog" aria-modal="false" aria-labelledby="voice-title">
           <div className="settings-header"><div><div className="eyebrow">HANDS-FREE NAVIGATION</div><h2 id="voice-title">Talk to Careway</h2></div><button className="icon-button" onClick={() => setVoiceOpen(false)} aria-label="Close voice commands"><X /></button></div>
-          <p className="settings-intro">Tap Start listening, allow microphone access, then say one command. Voice recognition depends on your browser and may send audio to its speech service.</p>
+          <p className="settings-intro">Tap once to speak a short command. You can also use the quick actions below. Your browser may process voice input using its speech service.</p>
           <div className="voice-status" role="status" aria-live="polite"><span className={voiceListening ? "voice-pulse active" : "voice-pulse"}><Mic size={20} /></span><div><b>{voiceListening ? "Listening now..." : "Voice assistant"}</b><small>{voiceStatus}</small></div></div>
           {voiceTranscript && <p className="voice-transcript"><b>Heard:</b> “{voiceTranscript}”</p>}
-          <button className="button button-primary voice-start" onClick={startVoiceRecognition} disabled={voiceListening}><Mic size={17} /> {voiceListening ? "Listening..." : "Start listening"}</button>
-          <div className="voice-command-list"><b>Commands you can try</b><ul><li>“Increase text” / “Decrease text”</li><li>“Dark mode” / “High contrast” / “Standard mode”</li><li>“Read page” / “Stop reading”</li><li>“Open accessibility settings”</li><li>“Go to resources” / “Prepare for visit”</li><li>“Open profile” / “Go to glossary”</li><li>“Scroll down” / “Scroll up” / “Help”</li></ul></div>
+          <div className="voice-actions"><button className="button button-primary voice-start" onClick={voiceListening ? stopVoiceRecognition : startVoiceRecognition} ><Mic size={17} /> {voiceListening ? "Stop listening" : "Start listening"}</button><button className="button button-secondary" onClick={() => { speakPage(); setVoiceStatus("Reading page content aloud."); }}><Volume2 size={16} /> Read page</button></div>
+          <div className="voice-command-list"><b>Quick actions</b><div className="voice-quick-grid"><button onClick={() => updatePreference("fontScale", Math.min(1.5, +(preferences.fontScale + 0.1).toFixed(1)))}>A+ Larger text</button><button onClick={() => updatePreference("fontScale", Math.max(0.9, +(preferences.fontScale - 0.1).toFixed(1)))}>A− Smaller text</button><button onClick={() => { setSettingsOpen(true); setVoiceOpen(false); }}>Accessibility settings</button><button onClick={() => { document.getElementById("prepare")?.scrollIntoView({behavior:"smooth"}); setVoiceOpen(false); }}>Appointment help</button></div><details><summary>Voice command examples</summary><ul><li>“Increase text” or “Decrease text”</li><li>“Dark mode” or “High contrast”</li><li>“Read page” or “Stop reading”</li><li>“Open profile” or “Go to glossary”</li><li>“Go to resources” or “Prepare for visit”</li></ul></details></div>
         </section>
       </div>}
       {announcement && <div className="sr-only" role="status" aria-live="polite">{announcement}</div>}
