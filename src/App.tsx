@@ -84,13 +84,13 @@ function App() {
   }, [preferences]);
 
   useEffect(() => {
-    if (!settingsOpen) return;
+    if (!settingsOpen && !voiceOpen) return;
     function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setSettingsOpen(false);
+      if (event.key === "Escape") { setSettingsOpen(false); setVoiceOpen(false); }
     }
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
-  }, [settingsOpen]);
+  }, [settingsOpen, voiceOpen]);
 
   function saveProfile(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -265,6 +265,7 @@ function App() {
             <a href="#resources" onClick={() => setMenuOpen(false)}>Explore resources</a>
             <a href="#prepare" onClick={() => setMenuOpen(false)}>Prepare for a visit</a>
             <a href="#profile" onClick={() => setMenuOpen(false)}>My access profile</a>
+            <a href="#checklist" onClick={() => setMenuOpen(false)}>Appointment checklist</a>
             <a href="#glossary" onClick={() => setMenuOpen(false)}>Healthcare glossary</a>
             <a href="#about" onClick={() => setMenuOpen(false)}>About</a>
             <button className="nav-accessibility" onClick={() => setSettingsOpen(true)}><Accessibility size={17} /> Accessibility</button>
