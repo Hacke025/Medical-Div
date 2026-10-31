@@ -90,3 +90,50 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 .contrast-dark .floating-voice{background:#293d34;color:#f2f6f3;border-color:#53665b}
 @media(max-width:680px){.voice-panel{padding:23px 20px}.glossary-grid{grid-template-columns:1fr}.checklist-progress{min-width:100%;margin-top:10px}}
 @media(prefers-reduced-motion:reduce){.voice-pulse.active{animation:none}}
+
+/* Compact, low-obstruction voice assistant */
+.floating-voice{width:46px;height:46px;min-width:46px;justify-content:center;padding:0;right:18px;bottom:82px;border-radius:50%;font-size:0;box-shadow:0 4px 16px #183f3426}
+.floating-voice svg{width:21px;height:21px}
+.floating-voice:focus-visible,.floating-accessibility:focus-visible,.voice-panel button:focus-visible,.settings-panel button:focus-visible{outline:3px solid #d77d36;outline-offset:3px}
+.voice-backdrop{background:transparent;pointer-events:none;justify-content:flex-end;align-items:flex-end;padding:0 18px 138px}
+.voice-panel{pointer-events:auto;width:min(365px,calc(100vw - 28px));height:auto;max-height:min(72vh,620px);border:1px solid #dce8df;border-radius:18px;padding:20px;box-shadow:0 12px 42px #132e2530;overflow-y:auto}
+.voice-panel .settings-header h2{font-size:20px}
+.voice-panel .settings-intro{margin:7px 0 13px;font-size:12px}
+.voice-status{padding:11px}
+.voice-pulse{width:34px;height:34px;flex-basis:34px}
+.voice-actions{display:flex;gap:8px;margin:10px 0}
+.voice-actions .voice-start{width:auto;flex:1;margin:0}
+.voice-actions .button-secondary{flex:1;justify-content:center}
+.voice-command-list{padding-top:12px;margin-top:4px}
+.voice-quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0}
+.voice-quick-grid button{min-height:42px;padding:9px;border:1px solid #dce8df;border-radius:9px;background:#f8fbf8;color:#315b49;text-align:left;font-size:11px;font-weight:700}
+.voice-command-list details{font-size:11px;color:#526d5e;margin-top:8px}
+.voice-command-list summary{cursor:pointer;padding:8px 0;font-weight:700}
+.voice-command-list ul{margin:4px 0}
+.access-needs-picker{margin:18px 0 10px;padding-top:16px;border-top:1px solid #e8eee9}
+.access-needs-picker>label{display:block;font-size:12px;font-weight:700;color:#385648;margin-bottom:5px}
+.access-needs-picker>label span{font-weight:400;color:#829087}
+.access-needs-picker>p{font-size:10px;line-height:1.5;color:#78877e;margin:0 0 10px}
+.access-needs-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.need-option{display:flex;align-items:flex-start;gap:9px;padding:11px;border:1px solid #e2ebe4;border-radius:9px;background:#fbfdfb;cursor:pointer;min-height:75px}
+.need-option input{position:absolute;opacity:0;width:1px;height:1px}
+.need-check{width:19px;height:19px;flex:0 0 19px;border:1px solid #bdcec1;border-radius:5px;display:grid;place-items:center;color:transparent}
+.need-option input:checked+.need-check{background:#34775d;border-color:#34775d;color:white}
+.need-option input:focus-visible+.need-check{outline:3px solid #df8c50;outline-offset:3px}
+.need-option>span:last-child{display:flex;flex-direction:column;gap:4px}
+.need-option b{font-size:10px;color:#365747}
+.need-option small{font-size:9px;line-height:1.45;color:#77877d}
+.request-copy{width:100%;justify-content:center;margin-top:10px;font-size:11px}
+.contrast-high .need-option,.contrast-high .voice-quick-grid button{background:#fff;color:#000;border:2px solid #000}
+.contrast-high .need-option b,.contrast-high .need-option small{color:#000}
+.contrast-dark .need-option,.contrast-dark .voice-quick-grid button{background:#17231e;border-color:#53665b;color:#f2f6f3}
+.contrast-dark .need-option b,.contrast-dark .need-option small{color:#d5e2d9}
+.contrast-dark .access-needs-picker>label{color:#f2f6f3}
+.contrast-dark .access-needs-picker>p{color:#c2d0c8}
+@media(max-width:680px){
+ .floating-voice{right:12px;bottom:76px;width:44px;height:44px;min-width:44px}
+ .voice-backdrop{padding:0 10px 128px;justify-content:center}
+ .voice-panel{width:100%;max-height:70vh;padding:17px}
+ .access-needs-grid{grid-template-columns:1fr}
+ .need-option{min-height:0}
+}
