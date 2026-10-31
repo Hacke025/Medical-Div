@@ -75,6 +75,9 @@ function App() {
   const [voiceStatus, setVoiceStatus] = useState("Tap the microphone, then say a command.");
   const recognitionRef = useRef<any>(null);
   const [glossaryQuery, setGlossaryQuery] = useState("");
+  const [navigatorField, setNavigatorField] = useState("preferred-name");
+  const [scannerResults, setScannerResults] = useState<{ level: string; issue: string; fix: string }[] | null>(null);
+  const [passportApplied, setPassportApplied] = useState(false);
   const [questionTopics, setQuestionTopics] = useState<string[]>(["Understanding next steps"]);
   const [questionNotes, setQuestionNotes] = useState("");
   const [questionsCopied, setQuestionsCopied] = useState(false);
@@ -296,6 +299,54 @@ function App() {
     setAnnouncement("Your demo request has been recorded on this page only. No information was sent.");
   }
 
+  const navigatorGuides: Record<string, { title: string; meaning: string; example: string; tip: string }> = {
+    "preferred-name": { title: "Preferred name", meaning: "The name you would like staff to use when speaking with you. It may be different from the name on official documents.", example: "Example: A form might ask for your preferred name separately from your legal name.", tip: "If the form requires a legal name for records or billing, follow its instructions and ask the office if you are unsure." },
+    "contact-method": { title: "Preferred contact method", meaning: "How the organization should try to reach you about administrative matters.", example: "Example options may include phone, email, text message, or a secure patient portal.", tip: "Check whether messages could contain private information and choose an option you are comfortable using." },
+    "communication": { title: "Communication preferences", meaning: "How you would prefer information to be shared or conversations to happen.", example: "Example: written instructions, captions, an interpreter, or extra time to respond.", tip: "Availability varies. Contact the organization to discuss what support it can arrange." },
+    "accommodations": { title: "Accessibility accommodations", meaning: "A change or support that helps you access a service, complete a task, or communicate.", example: "Example: step-free access, large-print materials, a quieter waiting area, or help using a digital form.", tip: "You can describe what would help without sharing a diagnosis." },
+    "emergency-contact": { title: "Emergency contact", meaning: "A person the organization may contact in an emergency, if the form requests one.", example: "Example: the form may ask for the person's name, relationship, and contact details.", tip: "Only provide this information directly to the healthcare organization through its approved process. Do not enter it into this demo." },
+    "insurance-id": { title: "Insurance member ID", meaning: "An identifier your insurance plan uses to match you with your coverage information.", example: "It is often printed on an insurance card and may be labeled Member ID or ID number.", tip: "Do not enter an insurance number into Careway. Provide it only through a trusted, official provider or insurer process." }
+  };
+  const activeNavigatorGuide = navigatorGuides[navigatorField];
+  function applyAccessPassport() {
+    const needs = profile.accessNeeds || [];
+    setPreferences((current) => ({
+      ...current,
+      fontScale: needs.includes("Vision") ? 1.2 : current.fontScale,
+      contrast: needs.includes("Vision") ? "high" : current.contrast,
+      spaciousText: needs.includes("Learning and memory") || needs.includes("Vision") || current.spaciousText,
+      reducedMotion: needs.includes("Sensory needs") ? true : current.reducedMotion,
+      dyslexiaFont: needs.includes("Learning and memory") ? true : current.dyslexiaFont,
+    }));
+    setPassportApplied(true);
+    setAnnouncement("Your saved access preferences have been applied to this Careway demo. Review and adjust them at any time.");
+  }
+  function scanAccessibility() {
+    const findings: { level: string; issue: string; fix: string }[] = [];
+    const controls = Array.from(document.querySelectorAll("button, input, select, textarea"));
+    const unlabeled = controls.filter((el) => {
+      const node = el as HTMLElement;
+      const aria = node.getAttribute("aria-label") || node.getAttribute("aria-labelledby");
+      const id = node.id;
+      const label = id ? document.querySelector('label[for="' + CSS.escape(id) + '"]') : null;
+      const wrapped = node.closest("label");
+      const text = (node.textContent || "").trim();
+      return !aria && !label && !wrapped && !text && node.getAttribute("type") !== "hidden";
+    });
+    if (unlabeled.length) findings.push({ level: "Needs review", issue: unlabeled.length + " form control(s) may not have a clear accessible name.", fix: "Add a visible label or a meaningful aria-label/aria-labelledby relationship." });
+    const imagesWithoutAlt = Array.from(document.querySelectorAll("img")).filter((img) => !img.hasAttribute("alt"));
+    if (imagesWithoutAlt.length) findings.push({ level: "Needs review", issue: imagesWithoutAlt.length + " image(s) do not declare alternative text.", fix: "Add useful alt text for informative images, or alt=\"\" for decorative images." });
+    const links = Array.from(document.querySelectorAll("a"));
+    const vagueLinks = links.filter((link) => !((link.textContent || "").trim()) && !link.getAttribute("aria-label"));
+    if (vagueLinks.length) findings.push({ level: "Needs review", issue: vagueLinks.length + " link(s) may not have an accessible name.", fix: "Give each link meaningful text or an accessible label." });
+    const headings = Array.from(document.querySelectorAll("h1"));
+    if (headings.length !== 1) findings.push({ level: "Check structure", issue: "The page has " + headings.length + " top-level heading(s).", fix: "Use one clear page-level heading, then nest section headings in a logical order." });
+    if (!findings.length) findings.push({ level: "Good signal", issue: "No obvious missing labels, image alt attributes, or unnamed links were detected by this quick scan.", fix: "This is only a basic automated check. Manually test keyboard navigation, screen readers, zoom, and color contrast." });
+    findings.push({ level: "Manual check", issue: "Color contrast, keyboard traps, reading order, and screen-reader behavior need human testing.", fix: "Test with keyboard-only navigation and accessibility tools; automated checks cannot confirm the whole experience." });
+    setScannerResults(findings);
+    setAnnouncement("Accessibility scan complete. Review the findings and remember that automated checks are not a certification.");
+  }
+
   const appClasses = [
     "app-shell",
     "contrast-" + preferences.contrast,
@@ -329,6 +380,8 @@ function App() {
             <a href="#profile" onClick={() => setMenuOpen(false)}>My access profile</a>
             <a href="#checklist" onClick={() => setMenuOpen(false)}>Appointment checklist</a>
             <a href="#questions" onClick={() => setMenuOpen(false)}>Question builder</a>
+            <a href="#navigator" onClick={() => setMenuOpen(false)}>Form navigator</a>
+            <a href="#barrier-scanner" onClick={() => setMenuOpen(false)}>Barrier scanner</a>
             <a href="#glossary" onClick={() => setMenuOpen(false)}>Healthcare glossary</a>
             <a href="#about" onClick={() => setMenuOpen(false)}>About</a>
             <button className="nav-accessibility" onClick={() => setSettingsOpen(true)}><Accessibility size={17} /> Accessibility</button>
@@ -472,6 +525,44 @@ function App() {
               <button className="button button-secondary request-copy" type="button" onClick={copyAccessRequest}><Copy size={15}/> Copy sample accommodation request</button>
               {profileSaved && <p className="saved-message" role="status">Saved in this browser. You can edit or clear it at any time.</p>}
             </form>
+          </div>
+        </section>
+
+        <section className="innovation-section section-pad" id="navigator">
+          <div className="container">
+            <div className="section-heading"><div><div className="eyebrow">CAREWAY NAVIGATOR</div><h2>Make confusing forms easier to understand.</h2><p>Choose a field to see a plain-language explanation, a fictional example, and a practical tip. No personal information is collected here.</p></div><span className="innovation-tag"><Sparkles size={15}/> Guided help</span></div>
+            <div className="innovation-grid">
+              <div className="innovation-card navigator-card">
+                <label htmlFor="navigator-field">Which form field are you looking at?</label>
+                <select id="navigator-field" value={navigatorField} onChange={(event) => setNavigatorField(event.target.value)}>
+                  <option value="preferred-name">Preferred name</option><option value="contact-method">Preferred contact method</option><option value="communication">Communication preferences</option><option value="accommodations">Accessibility accommodations</option><option value="emergency-contact">Emergency contact</option><option value="insurance-id">Insurance member ID</option>
+                </select>
+                <div className="navigator-explanation" aria-live="polite"><span className="innovation-kicker">PLAIN-LANGUAGE EXPLANATION</span><h3>{activeNavigatorGuide.title}</h3><p>{activeNavigatorGuide.meaning}</p><div className="example-box"><b>Fictional example</b><p>{activeNavigatorGuide.example}</p></div><div className="tip-box"><b>Helpful tip</b><p>{activeNavigatorGuide.tip}</p></div></div>
+              </div>
+              <aside className="innovation-card navigator-aside"><span className="innovation-icon"><BookOpen size={22}/></span><h3>One field at a time.</h3><p>Careway's prototype uses reviewed, topic-specific explanations rather than guessing what a form means. Always follow the actual form and ask its issuer when instructions are unclear.</p><div className="privacy-note"><ShieldCheck size={15}/> Do not enter names, insurance IDs, contact details, or medical information into this demo.</div></aside>
+            </div>
+          </div>
+        </section>
+
+        <section className="innovation-section passport-section section-pad" id="passport">
+          <div className="container">
+            <div className="section-heading"><div><div className="eyebrow">ACCESS PASSPORT</div><h2>Your access preferences, ready when you are.</h2><p>Apply the preferences you saved in your Careway profile to this demo with one action.</p></div></div>
+            <div className="passport-panel">
+              <div><span className="innovation-icon"><Accessibility size={23}/></span><h3>Your saved preferences</h3><p>{profile.accessNeeds?.length ? profile.accessNeeds.join(" · ") : "No access needs selected yet"}</p><small>Communication: {profile.communication}. Visit format: {profile.visitFormat}.</small></div>
+              <div className="passport-actions"><button className="button button-primary" type="button" onClick={applyAccessPassport}>Apply my Access Passport <ArrowRight size={16}/></button><button className="text-button" type="button" onClick={() => setSettingsOpen(true)}>Fine-tune display settings</button>{passportApplied && <p className="saved-message" role="status">Preferences applied. You can change any setting above.</p>}</div>
+            </div>
+            <p className="glossary-note">Your Access Passport uses the profile stored in this browser. It does not transfer settings to other websites or devices.</p>
+          </div>
+        </section>
+
+        <section className="innovation-section scanner-section section-pad" id="barrier-scanner">
+          <div className="container">
+            <div className="section-heading"><div><div className="eyebrow">BARRIER SCANNER</div><h2>Look for barriers before they block someone.</h2><p>Run a quick check of this Careway page for a few common markup issues. Results are suggestions, not an accessibility certification.</p></div><button className="button button-primary" type="button" onClick={scanAccessibility}><Search size={16}/> Scan this page</button></div>
+            <div className="scanner-panel">
+              <div className="scanner-intro"><span className="innovation-icon"><ShieldCheck size={22}/></span><div><h3>Accessibility quick scan</h3><p>Checks accessible names on controls, image alt attributes, link names, and the page's top-level heading count.</p></div></div>
+              {!scannerResults ? <p className="scanner-placeholder">Your scan results will appear here. Try scanning this page.</p> : <div className="scanner-results" aria-live="polite">{scannerResults.map((item, index) => <article className="scanner-result" key={index}><span className="result-level">{item.level}</span><div><b>{item.issue}</b><p>{item.fix}</p></div></article>)}</div>}
+              <p className="glossary-note">This scanner does not fully evaluate contrast, keyboard behavior, screen-reader output, captions, or whether content is understandable. Manual testing is essential.</p>
+            </div>
           </div>
         </section>
 
