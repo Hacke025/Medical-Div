@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Accessibility, ArrowRight, BookOpen, CalendarDays, Check, Clock3, FileText, HeartPulse, Menu, Mic, Minus, Plus,
-  Search, Settings2, ShieldCheck, Sparkles, Stethoscope, Type, Volume2, X, Copy
+  Search, Settings2, ShieldCheck, Sparkles, Stethoscope, Type, Volume2, X, Copy, Printer, Languages
 } from "lucide-react";
 
 type ContrastMode = "standard" | "high" | "dark";
@@ -84,6 +84,7 @@ function App() {
   const [documentName, setDocumentName] = useState("");
   const [documentText, setDocumentText] = useState("");
   const [documentError, setDocumentError] = useState("");
+  const [packLanguage, setPackLanguage] = useState<"en" | "es">("en");
   const [questionTopics, setQuestionTopics] = useState<string[]>(["Understanding next steps"]);
   const [questionNotes, setQuestionNotes] = useState("");
   const [questionsCopied, setQuestionsCopied] = useState(false);
@@ -473,6 +474,7 @@ function App() {
             <a href="#prepare" onClick={() => setMenuOpen(false)}>Prepare for care</a>
             <a href="#journey" onClick={() => setMenuOpen(false)}>All tools</a>
             <a href="#profile" onClick={() => setMenuOpen(false)}>My preferences</a>
+            <a href="#language-support" onClick={() => setMenuOpen(false)}>Language support</a>
             <button className="nav-accessibility" onClick={() => setSettingsOpen(true)}><Accessibility size={17} /> Accessibility</button>
           </nav>
         </div>
@@ -730,6 +732,71 @@ function App() {
               <textarea id="question-notes" rows={2} maxLength={180} value={questionNotes} onChange={(event) => {setQuestionNotes(event.target.value); setQuestionsCopied(false);}} placeholder="Example: Ask for a printed summary."/>
               <button className="button button-primary form-submit" type="button" disabled={!suggestedQuestions.length} onClick={copyQuestionList}><Copy size={16}/>{questionsCopied ? "Copied — review before sharing" : "Copy my question list"}</button>
             </div>
+          </div>
+        </section>
+
+        <section className="language-section section-pad" id="language-support">
+          <div className="container">
+            <div className="section-heading">
+              <div><div className="eyebrow">LANGUAGE SUPPORT</div><h2>Make it easier to ask for language support.</h2><p>Choose English or Spanish to see useful phrases and create an appointment pack in that language. This prototype provides reviewed sample phrases, not live translation or interpretation.</p></div>
+              <span className="innovation-tag"><Languages size={15}/> English / Español</span>
+            </div>
+            <div className="language-panel">
+              <label htmlFor="pack-language">Language for your appointment pack and phrases</label>
+              <select id="pack-language" value={packLanguage} onChange={(event) => setPackLanguage(event.target.value as "en" | "es")}>
+                <option value="en">English</option><option value="es">Español (Spanish)</option>
+              </select>
+              <div className="phrase-grid">
+                {(packLanguage === "es" ? [
+                  ["I would prefer to speak in Spanish.","Preferiría hablar en español."],
+                  ["Is a qualified interpreter available?","¿Hay un intérprete cualificado disponible?"],
+                  ["Could you explain that in simpler words?","¿Podría explicarlo con palabras más sencillas?"],
+                  ["Could I receive these instructions in writing?","¿Podría recibir estas instrucciones por escrito?"],
+                  ["I need a little more time to understand.","Necesito un poco más de tiempo para comprender."],
+                  ["Could you repeat that, please?","¿Podría repetirlo, por favor?"]
+                ] : [
+                  ["Language preference","I would prefer to speak in English."],
+                  ["Interpreter","Is a qualified interpreter available?"],
+                  ["Plain language","Could you explain that in simpler words?"],
+                  ["Written instructions","Could I receive these instructions in writing?"],
+                  ["More time","I need a little more time to understand."],
+                  ["Repeat","Could you repeat that, please?"]
+                ]).map(([title, phrase]) => <article className="phrase-card" key={title}><b>{title}</b><p>{phrase}</p></article>)}
+              </div>
+              <p className="glossary-note">If you need an interpreter, ask the healthcare organization what qualified language assistance it can provide. Do not rely on this demo for urgent, complex, or safety-critical communication.</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="appointment-pack-section section-pad" id="appointment-pack">
+          <div className="container">
+            <div className="section-heading pack-screen-heading">
+              <div><div className="eyebrow">YOUR APPOINTMENT PACK</div><h2>Bring your preparation together.</h2><p>Create a printable summary from your Careway question list, checklist, and access preferences. Review it before sharing.</p></div>
+              <span className="innovation-tag"><Printer size={15}/> Print-ready summary</span>
+            </div>
+            <div className="pack-preview">
+              <div className="pack-title-row"><div><span className="pack-brand">CAREWAY</span><h2>{packLanguage === "es" ? "Mi hoja de preparación para la cita" : "My appointment preparation sheet"}</h2><p>{packLanguage === "es" ? "Una guía personal para conversar con el equipo de atención." : "A personal guide for a conversation with your care team."}</p></div><span className="pack-language">{packLanguage === "es" ? "ESPAÑOL" : "ENGLISH"}</span></div>
+              <div className="pack-columns">
+                <div className="pack-block"><h3>{packLanguage === "es" ? "Información para la cita" : "Appointment details"}</h3><p><b>{packLanguage === "es" ? "Nombre o apodo:" : "Name or nickname:"}</b> {formName.trim() || (packLanguage === "es" ? "No indicado" : "Not provided")}</p><p><b>{packLanguage === "es" ? "Qué quiero preparar:" : "What I want to prepare:"}</b> {formReason.trim() || (packLanguage === "es" ? "Añadir antes de la cita" : "Add before the appointment")}</p><p><b>{packLanguage === "es" ? "Recordatorio personal:" : "Personal reminder:"}</b> {questionNotes.trim() || (packLanguage === "es" ? "Ninguno" : "None")}</p></div>
+                <div className="pack-block"><h3>{packLanguage === "es" ? "Preferencias de comunicación y acceso" : "Communication and access preferences"}</h3><p><b>{packLanguage === "es" ? "Comunicación:" : "Communication:"}</b> {profile.communication}</p><p><b>{packLanguage === "es" ? "Formato de la cita:" : "Visit format:"}</b> {profile.visitFormat}</p><p><b>{packLanguage === "es" ? "Apoyos que podrían ayudar:" : "Supports that may help:"}</b> {(profile.accessNeeds || []).join(", ") || (packLanguage === "es" ? "No se seleccionaron preferencias" : "No preferences selected")}</p><p><b>{packLanguage === "es" ? "Nota:" : "Note:"}</b> {profile.accommodation || (packLanguage === "es" ? "Ninguna" : "None")}</p></div>
+              </div>
+              <div className="pack-block pack-questions"><h3>{packLanguage === "es" ? "Preguntas que quiero hacer" : "Questions I may want to ask"}</h3>
+                {suggestedQuestions.length ? <ol>{(packLanguage === "es" ? [
+                  "¿Qué sucederá después de hoy?","¿Podría explicar los próximos pasos en orden?","¿Con quién debo comunicarme si tengo preguntas más adelante?",
+                  "¿Podría recibir las instrucciones por escrito?","¿Qué opciones de comunicación hay si necesito una aclaración?",
+                  "¿Qué apoyos de accesibilidad pueden ofrecer para esta cita?","¿Hay opciones accesibles para registrarme y esperar?",
+                  "¿Podría alguien explicar los costos previstos antes de que tome una decisión?","¿Quién puede ayudarme a entender qué podría cubrir mi plan?",
+                  "¿Puedo revisar o completar los formularios en un formato accesible antes de la cita?","¿Podría explicar cualquier sección que no entienda?",
+                  "¿Cómo y cuándo recibiré la información de seguimiento?","¿Cuál es la mejor manera de comunicarme con la oficina después de esta cita?"
+                ] : suggestedQuestions).map((q, i) => <li key={i}>{q}</li>)}</ol> : <p>{packLanguage === "es" ? "Selecciona temas en el creador de preguntas para añadir preguntas." : "Select topics in the question builder to add questions."}</p>}
+              </div>
+              <div className="pack-block"><h3>{packLanguage === "es" ? "Lista de preparación" : "Preparation checklist"}</h3><ul>{(packLanguage === "es" ? [
+                "Anotar las preguntas principales que quiero hacer","Verificar la hora, el lugar y el transporte de la cita","Preguntar por las opciones de accesibilidad que podría necesitar","Verificar si puedo completar los formularios con anticipación","Preparar los temas que quiero conversar (sin guardar datos sensibles aquí)","Preguntar cómo recibir instrucciones de seguimiento en un formato accesible"
+              ] : checklistItems).map((item, index) => <li key={index}><span className={completedTasks.includes(checklistItems[index]) ? "pack-check done" : "pack-check"}>{completedTasks.includes(checklistItems[index]) ? "✓" : "○"}</span>{item}</li>)}</ul></div>
+              <p className="pack-footer">{packLanguage === "es" ? "Esta hoja es una ayuda de preparación. No es un expediente médico ni una instrucción clínica. Revisa el contenido y comparte solo lo que desees." : "This sheet is a preparation aid, not a medical record or clinical instruction. Review it and share only what you choose."}</p>
+            </div>
+            <div className="pack-actions"><button className="button button-primary" type="button" onClick={() => window.print()}><Printer size={16}/>{packLanguage === "es" ? "Imprimir / Guardar como PDF" : "Print / Save as PDF"}</button><a className="text-button" href="#questions">{packLanguage === "es" ? "Editar mis preguntas" : "Edit my questions"}</a></div>
+            <p className="glossary-note">{packLanguage === "es" ? "Las frases y preguntas de ejemplo están traducidas; tus notas personales y algunas preferencias se muestran tal como las escribiste." : "Your personal notes and some saved preference labels are shown as entered; Careway does not automatically translate them."} {packLanguage === "es" ? "No incluyas información médica privada en esta demostración." : "Do not include private medical information in this demo."}</p>
           </div>
         </section>
 
