@@ -717,6 +717,7 @@ function App() {
               <a className="journey-card" href="#questions"><span className="journey-number">04</span><b>Prepare questions</b><p>Create a question list and a simple appointment checklist.</p><span>Build questions <ArrowRight size={15}/></span></a>
               <a className="journey-card" href="#barrier-scanner"><span className="journey-number">05</span><b>Check for barriers</b><p>Run a quick scan for common accessibility markup issues.</p><span>Run Barrier Scanner <ArrowRight size={15}/></span></a>
               <a className="journey-card" href="#prepare"><span className="journey-number">06</span><b>Take your next step</b><p>Use your plan to guide a conversation with the healthcare office.</p><span>Start planning <ArrowRight size={15}/></span></a>
+              <a className="journey-card" href="#appointment-pack"><span className="journey-number">07</span><b>Create an appointment pack</b><p>Bring your questions, checklist, and access preferences into one printable summary.</p><span>Build my pack <ArrowRight size={15}/></span></a>
             </div>
           </div>
         </section>
