@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Accessibility, ArrowRight, BookOpen, CalendarDays, Check, Clock3, FileText, HeartPulse, Menu, Mic, Minus, Plus,
-  Search, Settings2, ShieldCheck, Sparkles, Stethoscope, Type, Volume2, X, Copy, Ear, Eye, Brain, Hand, MessageCircle, Heart
+  Search, Settings2, ShieldCheck, Sparkles, Stethoscope, Type, Volume2, X, Copy
 } from "lucide-react";
 
 type ContrastMode = "standard" | "high" | "dark";
