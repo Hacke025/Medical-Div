@@ -149,7 +149,7 @@ function App() {
       <div className="top-strip">
         <div className="container top-strip-inner">
           <span><ShieldCheck size={14} aria-hidden="true" /> A learning prototype — not a real medical portal</span>
-          <span className="top-strip-note">Your demo entries stay in this browser session.</span>
+          <span className="top-strip-note">Your demo preferences stay in this browser.</span>
         </div>
       </div>
 
