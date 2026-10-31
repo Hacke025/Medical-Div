@@ -570,10 +570,11 @@ function App() {
           <div className="container">
             <div className="section-heading"><div><div className="eyebrow">ONE STEP AT A TIME</div><h2>Your care journey, made clearer.</h2><p>You can start wherever you are. Choose a step to jump to a practical tool.</p></div></div>
             <div className="journey-grid">
-              <a className="journey-card" href="#resources"><span className="journey-number">01</span><b>Understand</b><p>Explore plain-language guides and common healthcare terms.</p><span>Explore resources <ArrowRight size={15}/></span></a>
-              <a className="journey-card" href="#profile"><span className="journey-number">02</span><b>Choose access options</b><p>Think about communication, sensory, mobility, and other preferences.</p><span>Build access profile <ArrowRight size={15}/></span></a>
-              <a className="journey-card" href="#questions"><span className="journey-number">03</span><b>Prepare</b><p>Create a question list and a simple appointment checklist.</p><span>Build questions <ArrowRight size={15}/></span></a>
-              <a className="journey-card" href="#prepare"><span className="journey-number">04</span><b>Take your next step</b><p>Use your plan to guide a conversation with the healthcare office.</p><span>Start planning <ArrowRight size={15}/></span></a>
+              <a className="journey-card" href="#navigator"><span className="journey-number">01</span><b>Understand the form</b><p>Get plain-language explanations for confusing healthcare fields.</p><span>Open Navigator <ArrowRight size={15}/></span></a>
+              <a className="journey-card" href="#passport"><span className="journey-number">02</span><b>Personalize access</b><p>Save preferences and apply them to your Careway experience.</p><span>Open Access Passport <ArrowRight size={15}/></span></a>
+              <a className="journey-card" href="#questions"><span className="journey-number">03</span><b>Prepare questions</b><p>Create a question list and a simple appointment checklist.</p><span>Build questions <ArrowRight size={15}/></span></a>
+              <a className="journey-card" href="#barrier-scanner"><span className="journey-number">04</span><b>Check for barriers</b><p>Run a quick scan for common accessibility markup issues.</p><span>Run Barrier Scanner <ArrowRight size={15}/></span></a>
+              <a className="journey-card" href="#prepare"><span className="journey-number">05</span><b>Take your next step</b><p>Use your plan to guide a conversation with the healthcare office.</p><span>Start planning <ArrowRight size={15}/></span></a>
             </div>
           </div>
         </section>
