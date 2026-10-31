@@ -311,7 +311,7 @@ function App() {
     "insurance-id": { title: "Insurance member ID", meaning: "An identifier your insurance plan uses to match you with your coverage information.", example: "It is often printed on an insurance card and may be labeled Member ID or ID number.", tip: "Do not enter an insurance number into Careway. Provide it only through a trusted, official provider or insurer process." }
   };
   function breakDownNotice() {
-    const cleaned = noticeText.replace(/\\s+/g, " ").trim();
+    const cleaned = noticeText.replace(/\s+/g, " ").trim();
     if (!cleaned) {
       setNoticeSentences([]);
       setNoticeDetails([]);
@@ -320,10 +320,10 @@ function App() {
     }
     const sentences = cleaned.match(/[^.!?]+[.!?]?/g)?.map((part) => part.trim()).filter(Boolean) || [cleaned];
     const detailPatterns = [
-      { label: "Date or time", pattern: /\\b(?:\\d{1,2}\\s)?(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\\s+\\d{1,2}(?:,?\\s+\\d{4})?|\\b\\d{1,2}[/-]\\d{1,2}(?:[/-]\\d{2,4})?|\\b\\d{1,2}:\\d{2}\\s?(?:AM|PM)?\\b/gi },
-      { label: "Phone number", pattern: /\\b(?:\\+?1[ .-]?)?(?:\\(?\\d{3}\\)?[ .-]?)\\d{3}[ .-]?\\d{4}\\b/g },
-      { label: "Cost or amount", pattern: /\\$\\s?\\d+(?:,\\d{3})*(?:\\.\\d{2})?/g },
-      { label: "Possible action words", pattern: /\\b(?:call|contact|bring|complete|submit|confirm|schedule|reschedule|arrive|reply|return|sign|pay)\\b[^.!?]*/gi },
+      { label: "Date or time", pattern: /\b(?:\d{1,2}\s)?(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2}(?:,?\s+\d{4})?|\b\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?|\b\d{1,2}:\d{2}\s?(?:AM|PM)?\b/gi },
+      { label: "Phone number", pattern: /\b(?:\+?1[ .-]?)?(?:\(?\d{3}\)?[ .-]?)\d{3}[ .-]?\d{4}\b/g },
+      { label: "Cost or amount", pattern: /\$\s?\d+(?:,\d{3})*(?:\.\d{2})?/g },
+      { label: "Possible action words", pattern: /\b(?:call|contact|bring|complete|submit|confirm|schedule|reschedule|arrive|reply|return|sign|pay)\b[^.!?]*/gi },
     ];
     const found: string[] = [];
     detailPatterns.forEach(({ label, pattern }) => {
