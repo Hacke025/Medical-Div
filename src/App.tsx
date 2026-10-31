@@ -78,6 +78,9 @@ function App() {
   const [navigatorField, setNavigatorField] = useState("preferred-name");
   const [scannerResults, setScannerResults] = useState<{ level: string; issue: string; fix: string }[] | null>(null);
   const [passportApplied, setPassportApplied] = useState(false);
+  const [noticeText, setNoticeText] = useState("");
+  const [noticeSentences, setNoticeSentences] = useState<string[]>([]);
+  const [noticeDetails, setNoticeDetails] = useState<string[]>([]);
   const [questionTopics, setQuestionTopics] = useState<string[]>(["Understanding next steps"]);
   const [questionNotes, setQuestionNotes] = useState("");
   const [questionsCopied, setQuestionsCopied] = useState(false);
@@ -307,6 +310,40 @@ function App() {
     "emergency-contact": { title: "Emergency contact", meaning: "A person the organization may contact in an emergency, if the form requests one.", example: "Example: the form may ask for the person's name, relationship, and contact details.", tip: "Only provide this information directly to the healthcare organization through its approved process. Do not enter it into this demo." },
     "insurance-id": { title: "Insurance member ID", meaning: "An identifier your insurance plan uses to match you with your coverage information.", example: "It is often printed on an insurance card and may be labeled Member ID or ID number.", tip: "Do not enter an insurance number into Careway. Provide it only through a trusted, official provider or insurer process." }
   };
+  function breakDownNotice() {
+    const cleaned = noticeText.replace(/\\s+/g, " ").trim();
+    if (!cleaned) {
+      setNoticeSentences([]);
+      setNoticeDetails([]);
+      setAnnouncement("Paste some non-sensitive text first.");
+      return;
+    }
+    const sentences = cleaned.match(/[^.!?]+[.!?]?/g)?.map((part) => part.trim()).filter(Boolean) || [cleaned];
+    const detailPatterns = [
+      { label: "Date or time", pattern: /\\b(?:\\d{1,2}\\s)?(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\\s+\\d{1,2}(?:,?\\s+\\d{4})?|\\b\\d{1,2}[/-]\\d{1,2}(?:[/-]\\d{2,4})?|\\b\\d{1,2}:\\d{2}\\s?(?:AM|PM)?\\b/gi },
+      { label: "Phone number", pattern: /\\b(?:\\+?1[ .-]?)?(?:\\(?\\d{3}\\)?[ .-]?)\\d{3}[ .-]?\\d{4}\\b/g },
+      { label: "Cost or amount", pattern: /\\$\\s?\\d+(?:,\\d{3})*(?:\\.\\d{2})?/g },
+      { label: "Possible action words", pattern: /\\b(?:call|contact|bring|complete|submit|confirm|schedule|reschedule|arrive|reply|return|sign|pay)\\b[^.!?]*/gi },
+    ];
+    const found: string[] = [];
+    detailPatterns.forEach(({ label, pattern }) => {
+      const matches = cleaned.match(pattern);
+      if (matches?.length) found.push(label + ": " + [...new Set(matches)].join(" · "));
+    });
+    setNoticeSentences(sentences);
+    setNoticeDetails(found);
+    setAnnouncement("Your text has been organized in this browser. Check every detail against the original message.");
+  }
+  function readNotice() {
+    if (!noticeSentences.length || !("speechSynthesis" in window)) {
+      setAnnouncement("There is no organized text to read, or text-to-speech is unavailable.");
+      return;
+    }
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(new SpeechSynthesisUtterance(noticeSentences.join(" ")));
+    setAnnouncement("Reading your organized message aloud.");
+  }
+
   const activeNavigatorGuide = navigatorGuides[navigatorField];
   function applyAccessPassport() {
     const needs = profile.accessNeeds || [];
@@ -375,15 +412,11 @@ function App() {
             {menuOpen ? <X /> : <Menu />}
           </button>
           <nav className={menuOpen ? "main-nav open" : "main-nav"} aria-label="Main navigation">
-            <a href="#resources" onClick={() => setMenuOpen(false)}>Explore resources</a>
-            <a href="#prepare" onClick={() => setMenuOpen(false)}>Prepare for a visit</a>
-            <a href="#profile" onClick={() => setMenuOpen(false)}>My access profile</a>
-            <a href="#checklist" onClick={() => setMenuOpen(false)}>Appointment checklist</a>
-            <a href="#questions" onClick={() => setMenuOpen(false)}>Question builder</a>
-            <a href="#navigator" onClick={() => setMenuOpen(false)}>Form navigator</a>
-            <a href="#barrier-scanner" onClick={() => setMenuOpen(false)}>Barrier scanner</a>
-            <a href="#glossary" onClick={() => setMenuOpen(false)}>Healthcare glossary</a>
-            <a href="#about" onClick={() => setMenuOpen(false)}>About</a>
+            <a href="#resources" onClick={() => setMenuOpen(false)}>Explore</a>
+            <a href="#reading-companion" onClick={() => setMenuOpen(false)}>Understand a message</a>
+            <a href="#prepare" onClick={() => setMenuOpen(false)}>Prepare for care</a>
+            <a href="#journey" onClick={() => setMenuOpen(false)}>All tools</a>
+            <a href="#profile" onClick={() => setMenuOpen(false)}>My preferences</a>
             <button className="nav-accessibility" onClick={() => setSettingsOpen(true)}><Accessibility size={17} /> Accessibility</button>
           </nav>
         </div>
@@ -395,12 +428,12 @@ function App() {
             <div className="hero-copy">
               <div className="eyebrow"><span className="eyebrow-dot" /> HEALTHCARE SHOULD BE FOR EVERYONE</div>
               <h1>Healthcare can be complicated. <em>Finding your way shouldn't be.</em></h1>
-              <p className="hero-description">A calmer, clearer way to understand healthcare information, prepare for appointments, and explore accessibility options.</p>
+              <p className="hero-description">A practical guide for understanding healthcare information, preparing for appointments, and finding ways to make care work better for you. No special knowledge or disability label required.</p>
               <div className="hero-actions">
                 <a className="button button-primary" href="#resources">Explore the guide <ArrowRight size={17} /></a>
                 <button className="button button-secondary" onClick={speakPage}><Volume2 size={17} /> Read this page</button>
               </div>
-              <div className="hero-trust"><ShieldCheck size={16} /> Designed with accessibility and user control in mind</div>
+              <div className="hero-trust"><ShieldCheck size={16} /> Built for different ways of reading, listening, learning, and communicating</div>
             </div>
             <div className="hero-visual" aria-label="Illustration of a person reviewing a care plan">
               <div className="visual-orbit orbit-one" />
@@ -421,6 +454,7 @@ function App() {
         <section className="quick-section" aria-label="Quick links">
           <div className="container quick-grid">
             <a href="#resources" className="quick-card"><span className="quick-icon lavender"><BookOpen /></span><span><b>Learn in plain language</b><small>Clear explanations, less jargon</small></span><ArrowRight className="quick-arrow" size={18} /></a>
+            <a href="#reading-companion" className="quick-card"><span className="quick-icon peach"><FileText /></span><span><b>Understand a message</b><small>Break long text into smaller parts</small></span><ArrowRight className="quick-arrow" size={18} /></a>
             <a href="#prepare" className="quick-card"><span className="quick-icon mint"><CalendarDays /></span><span><b>Prepare for a visit</b><small>Make a plan that works for you</small></span><ArrowRight className="quick-arrow" size={18} /></a>
             <button className="quick-card quick-card-button" onClick={() => setSettingsOpen(true)}><span className="quick-icon peach"><Accessibility /></span><span><b>Make this page yours</b><small>Adjust how you experience content</small></span><ArrowRight className="quick-arrow" size={18} /></button>
           </div>
@@ -444,6 +478,25 @@ function App() {
               })}
               {filteredArticles.length === 0 && <p className="empty-state">No guides match that search. Try a different word.</p>}
             </div>
+          </div>
+        </section>
+
+        <section className="reading-companion-section section-pad" id="reading-companion">
+          <div className="container">
+            <div className="section-heading"><div><div className="eyebrow">READING COMPANION</div><h2>Make a long message easier to work through.</h2><p>Paste a non-sensitive appointment reminder, billing notice, or general healthcare message. Careway separates it into readable pieces and highlights possible dates, amounts, contact details, and action words.</p></div></div>
+            <div className="reading-layout">
+              <div className="reading-input-card">
+                <label htmlFor="notice-text">Paste a message to organize</label>
+                <textarea id="notice-text" rows={7} maxLength={5000} value={noticeText} onChange={(event) => setNoticeText(event.target.value)} placeholder="Paste a general message here. Remove names, dates of birth, account numbers, diagnoses, and other private details first." />
+                <div className="reading-actions"><button className="button button-primary" type="button" onClick={breakDownNotice}><Sparkles size={16}/> Organize this message</button><button className="text-button" type="button" onClick={() => { setNoticeText(""); setNoticeSentences([]); setNoticeDetails([]); window.speechSynthesis?.cancel(); }}>Clear</button></div>
+                <p className="privacy-note"><ShieldCheck size={15}/> Processing happens in this browser. Do not paste private medical or identifying information. This tool does not verify whether the message is correct.</p>
+              </div>
+              <div className="reading-output-card" aria-live="polite">
+                <div className="reading-output-heading"><BookOpen size={19}/><b>Your message, organized</b></div>
+                {!noticeSentences.length ? <p className="reading-empty">Your organized message will appear here. Careway does not rewrite or interpret medical instructions.</p> : <><div className="reading-sentences">{noticeSentences.map((sentence,index)=><p key={index}><span>{String(index+1).padStart(2,"0")}</span>{sentence}</p>)}</div>{noticeDetails.length>0 && <div className="reading-details"><b>Details to double-check in the original</b>{noticeDetails.map((detail,index)=><p key={index}>{detail}</p>)}</div>}<button className="button button-secondary" type="button" onClick={readNotice}><Volume2 size={16}/> Read organized text aloud</button></>}
+              </div>
+            </div>
+            <p className="glossary-note">This is a reading aid, not an AI interpretation or a source of medical advice. Always rely on the original message and contact its sender if anything is unclear.</p>
           </div>
         </section>
 
@@ -568,13 +621,14 @@ function App() {
 
         <section className="journey-section section-pad" id="journey">
           <div className="container">
-            <div className="section-heading"><div><div className="eyebrow">ONE STEP AT A TIME</div><h2>Your care journey, made clearer.</h2><p>You can start wherever you are. Choose a step to jump to a practical tool.</p></div></div>
+            <div className="section-heading"><div><div className="eyebrow">CAREWAY TOOLKIT</div><h2>What would you like help with?</h2><p>Start with the task in front of you. Use as much or as little of Careway as you need.</p></div></div>
             <div className="journey-grid">
-              <a className="journey-card" href="#navigator"><span className="journey-number">01</span><b>Understand the form</b><p>Get plain-language explanations for confusing healthcare fields.</p><span>Open Navigator <ArrowRight size={15}/></span></a>
-              <a className="journey-card" href="#passport"><span className="journey-number">02</span><b>Personalize access</b><p>Save preferences and apply them to your Careway experience.</p><span>Open Access Passport <ArrowRight size={15}/></span></a>
-              <a className="journey-card" href="#questions"><span className="journey-number">03</span><b>Prepare questions</b><p>Create a question list and a simple appointment checklist.</p><span>Build questions <ArrowRight size={15}/></span></a>
-              <a className="journey-card" href="#barrier-scanner"><span className="journey-number">04</span><b>Check for barriers</b><p>Run a quick scan for common accessibility markup issues.</p><span>Run Barrier Scanner <ArrowRight size={15}/></span></a>
-              <a className="journey-card" href="#prepare"><span className="journey-number">05</span><b>Take your next step</b><p>Use your plan to guide a conversation with the healthcare office.</p><span>Start planning <ArrowRight size={15}/></span></a>
+              <a className="journey-card" href="#reading-companion"><span className="journey-number">01</span><b>Understand a message</b><p>Organize long reminders and notices into readable parts.</p><span>Open Reading Companion <ArrowRight size={15}/></span></a>
+              <a className="journey-card" href="#navigator"><span className="journey-number">02</span><b>Understand the form</b><p>Get plain-language explanations for confusing healthcare fields.</p><span>Open Navigator <ArrowRight size={15}/></span></a>
+              <a className="journey-card" href="#passport"><span className="journey-number">03</span><b>Personalize access</b><p>Save preferences and apply them to your Careway experience.</p><span>Open Access Passport <ArrowRight size={15}/></span></a>
+              <a className="journey-card" href="#questions"><span className="journey-number">04</span><b>Prepare questions</b><p>Create a question list and a simple appointment checklist.</p><span>Build questions <ArrowRight size={15}/></span></a>
+              <a className="journey-card" href="#barrier-scanner"><span className="journey-number">05</span><b>Check for barriers</b><p>Run a quick scan for common accessibility markup issues.</p><span>Run Barrier Scanner <ArrowRight size={15}/></span></a>
+              <a className="journey-card" href="#prepare"><span className="journey-number">06</span><b>Take your next step</b><p>Use your plan to guide a conversation with the healthcare office.</p><span>Start planning <ArrowRight size={15}/></span></a>
             </div>
           </div>
         </section>
@@ -596,7 +650,7 @@ function App() {
         <section className="about-section" id="about"><div className="container about-inner"><div className="about-symbol"><Sparkles size={23} /></div><div><div className="eyebrow">THE IDEA BEHIND CAREWAY</div><h2>Access is more than a setting.</h2><p>Healthcare navigation should support different ways of reading, listening, communicating, and preparing. Careway is an early prototype exploring how digital tools can make that journey easier to understand.</p></div><div className="about-stamp"><span>BUILT AROUND</span><b>YOU.</b></div></div></section>
       </main>
 
-      <footer className="site-footer"><div className="container footer-inner"><a className="brand footer-brand" href="#home"><span className="brand-mark"><HeartPulse size={19} /></span><span>careway<span className="brand-period">.</span></span></a><p>Accessibility is a journey. This prototype is a starting point.</p><span>© 2026 Careway Demo</span></div></footer>
+      <footer className="site-footer"><div className="container footer-inner"><a className="brand footer-brand" href="#home"><span className="brand-mark"><HeartPulse size={19} /></span><span>careway<span className="brand-period">.</span></span></a><p>Clear information and usable design help everyone. Accessibility is built into the journey, not added as an afterthought.</p><span>© 2026 Careway Demo</span></div></footer>
 
       <button className="floating-accessibility" onClick={() => setSettingsOpen(true)} aria-label="Open accessibility settings"><Accessibility size={23} /><span>Accessibility</span></button>
       <button className="floating-voice" onClick={() => { if (voiceOpen) stopVoiceRecognition(); setVoiceOpen(!voiceOpen); }} aria-label={voiceOpen ? "Close voice assistant" : "Open voice assistant"} title="Talk to Careway"><Mic size={21} /></button>
