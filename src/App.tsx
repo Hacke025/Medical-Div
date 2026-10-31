@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Accessibility, ArrowRight, BookOpen, CalendarDays, Check, ChevronDown,
-  CircleHelp, Clock3, FileText, HeartPulse, Menu, Mic, Minus, Plus,
+  Accessibility, ArrowRight, BookOpen, CalendarDays, Check, Clock3, FileText, HeartPulse, Menu, Mic, Minus, Plus,
   Search, Settings2, ShieldCheck, Sparkles, Stethoscope, Type, Volume2, X
 } from "lucide-react";
 
