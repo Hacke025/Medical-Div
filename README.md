@@ -7,8 +7,11 @@ Careway is an early-stage accessibility and healthcare-navigation prototype. Its
 - Responsive healthcare-navigation landing page.
 - Accessibility settings for text size, color themes, a dyslexia-friendly system font, increased spacing, and reduced motion.
 - Preferences saved in the current browser using local storage.
-- Browser text-to-speech for reading the main page.
-- Plain-language starter guides and a sample appointment-preparation exercise.
+- Browser text-to-speech for reading the main page and supported document text.
+- Task-oriented healthcare guide, glossary, and plain-language form navigator.
+- Reading Companion for organizing pasted non-sensitive text, plus a local text/Markdown document reader with text-to-speech and detail spotting.
+- Appointment question builder, preparation checklist, Access Passport, and printable appointment pack.
+- English/Spanish sample phrases and Spanish/English printable appointment pack. Personal notes are not automatically translated.
 - GitHub Actions workflow for automatic GitHub Pages deployment.
 
 ## Important boundaries
@@ -17,6 +20,9 @@ This is a demonstration, not a medical service or a real patient portal.
 
 - Do not enter real medical information or identifying patient details.
 - The sample preparation form does not submit data to a server.
+- Language support is limited to reviewed English and Spanish phrases and a bilingual appointment-pack template; it is not live translation or interpretation.
+- The document reader currently accepts .txt and .md files only (up to 1 MB). It does not read PDFs, scanned images, or handwriting.
+- The Reading Companion and Document Reader organize text and identify possible patterns; they do not interpret or validate healthcare instructions.
 - No medical advice, diagnosis, or treatment recommendations are provided.
 - Accessibility settings are a prototype and do not guarantee WCAG conformance.
 - The current app is a standalone demo. It does not modify other healthcare websites.
