@@ -47,3 +47,46 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 .contrast-dark .profile-callout{background:#293d34;border-color:#53665b;color:#e0ebe4}
 .contrast-dark .profile-form select{background:#17231e;color:#fff;border-color:#53665b}
 @media(max-width:680px){.profile-grid{grid-template-columns:1fr;gap:25px}.profile-grid>div>h2{font-size:29px}}
+
+/* Functional controls added for the demo */
+.app-shell{zoom:var(--font-scale)}
+.floating-voice{position:fixed;right:18px;bottom:76px;z-index:8;border:1px solid #cbded2;border-radius:30px;background:#fff;color:#286b59;padding:11px 15px;display:flex;align-items:center;gap:8px;box-shadow:0 8px 24px #183f3422;font-size:12px;font-weight:700}
+.voice-backdrop{position:fixed;inset:0;background:#10292388;z-index:40;display:flex;justify-content:flex-end}
+.voice-panel{width:min(450px,100%);height:100%;overflow-y:auto;background:#fff;padding:29px 28px;box-shadow:-15px 0 50px #132e251c}
+.voice-status{display:flex;align-items:center;gap:13px;padding:16px;border:1px solid #e3ece5;border-radius:12px;background:#f7faf7}
+.voice-status>div{display:flex;flex-direction:column;gap:5px}.voice-status b{font-size:13px;color:#315747}.voice-status small{font-size:11px;color:#73857a;line-height:1.5}
+.voice-pulse{width:42px;height:42px;flex:0 0 42px;border-radius:50%;background:#e4f1e8;color:#347b60;display:grid;place-items:center}
+.voice-pulse.active{background:#d9f2e3;box-shadow:0 0 0 7px #d9f2e355;animation:voicePulse 1.3s infinite}
+@keyframes voicePulse{50%{box-shadow:0 0 0 12px #d9f2e322}}
+.voice-start{width:100%;margin:15px 0}
+.voice-command-list{border-top:1px solid #e9efeb;padding-top:17px;margin-top:7px;font-size:12px;color:#385448}
+.voice-command-list ul{padding-left:20px;line-height:2;color:#6c7e73;font-size:11px}
+.voice-transcript{padding:10px 12px;background:#f2f7f3;border-radius:8px;font-size:11px;color:#526d5e}
+.checklist-section{background:#f4f7f4}
+.checklist-progress{min-width:145px;display:flex;flex-direction:column;gap:4px;color:#527566;font-size:10px}
+.checklist-progress b{font:800 20px Manrope,sans-serif;color:#286c56}
+.progress-track{height:6px;border-radius:8px;background:#dfe9e1;overflow:hidden;margin-top:5px}.progress-track span{display:block;height:100%;background:#4d9471;border-radius:8px}
+.checklist-card{background:#fff;border:1px solid #e3ebe5;border-radius:13px;padding:12px 20px}
+.checklist-item{display:flex;align-items:center;gap:12px;padding:15px 4px;border-bottom:1px solid #edf1ee;color:#52665b;font-size:12px;cursor:pointer}
+.checklist-item input{position:absolute;opacity:0;width:1px;height:1px}
+.custom-check{width:22px;height:22px;flex:0 0 22px;border:1px solid #bdcec1;border-radius:6px;display:grid;place-items:center;color:transparent}
+.checklist-item input:checked+.custom-check{background:#34775d;border-color:#34775d;color:white}
+.checklist-item input:focus-visible+.custom-check{outline:3px solid #df8c50;outline-offset:3px}
+.checklist-item input:checked~span:last-child{text-decoration:line-through;color:#8c9a91}
+.checklist-card>.text-button{margin-top:8px}
+.glossary-section{background:#fff}
+.glossary-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.glossary-card{border:1px solid #e5ece7;border-radius:11px;padding:17px;background:#fcfdfc}
+.glossary-card h3{font:700 14px Manrope,sans-serif;color:#315b49;margin:0 0 8px}
+.glossary-card p{font-size:11px;line-height:1.7;color:#718078;margin:0}
+.glossary-note{font-size:10px;color:#7c8c82;margin-top:17px;line-height:1.6}
+.contrast-high .voice-panel,.contrast-high .voice-status,.contrast-high .checklist-card,.contrast-high .glossary-card{background:#fff;border:2px solid #000;color:#000}
+.contrast-high .voice-status small,.contrast-high .glossary-card p{color:#222}
+.contrast-high .floating-voice{background:#fff;color:#000;border:2px solid #000}
+.contrast-dark .voice-panel,.contrast-dark .voice-status,.contrast-dark .checklist-card,.contrast-dark .glossary-card{background:#202f2a;color:#f2f6f3;border-color:#53665b}
+.contrast-dark .voice-status b,.contrast-dark .glossary-card h3{color:#f2f6f3}
+.contrast-dark .voice-status small,.contrast-dark .glossary-card p,.contrast-dark .checklist-item{color:#c2d0c8}
+.contrast-dark .checklist-section{background:#192923}
+.contrast-dark .floating-voice{background:#293d34;color:#f2f6f3;border-color:#53665b}
+@media(max-width:680px){.voice-panel{padding:23px 20px}.glossary-grid{grid-template-columns:1fr}.checklist-progress{min-width:100%;margin-top:10px}}
+@media(prefers-reduced-motion:reduce){.voice-pulse.active{animation:none}}
