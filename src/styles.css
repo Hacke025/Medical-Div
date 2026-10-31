@@ -137,3 +137,26 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
  .access-needs-grid{grid-template-columns:1fr}
  .need-option{min-height:0}
 }
+
+
+/* Appointment question builder and care journey */
+.journey-section{background:var(--surface-soft,#f7f8fb)}
+.journey-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.journey-card{display:flex;flex-direction:column;gap:10px;min-height:190px;padding:22px;border:1px solid var(--border,#e5e7eb);border-radius:18px;background:var(--card,#fff);color:inherit;text-decoration:none}
+.journey-number{font-size:.8rem;font-weight:800;color:var(--accent,#7569b2)}
+.journey-card b{font-size:1.1rem}
+.journey-card p{margin:0;line-height:1.55;color:var(--muted,#667085)}
+.journey-card>span:last-child{display:flex;align-items:center;gap:7px;margin-top:auto;font-weight:700}
+.questions-layout{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:40px;align-items:start}
+.questions-layout>div:first-child>p{line-height:1.7;color:var(--muted,#667085)}
+.question-topic-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:18px 0}
+.question-topic{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--border,#e5e7eb);border-radius:12px;cursor:pointer;font-weight:600}
+.question-topic input{width:18px;height:18px;accent-color:var(--accent,#7569b2);flex:0 0 auto}
+.suggested-questions{padding:16px;margin-bottom:18px;border-radius:14px;background:var(--surface-soft,#f7f8fb)}
+.suggested-questions h4{margin:0 0 10px}
+.suggested-questions ul{margin:0;padding-left:22px}
+.suggested-questions li{margin:8px 0;line-height:1.5}
+.question-builder button:disabled{opacity:.5;cursor:not-allowed}
+.journey-card:focus-visible,.question-topic:focus-within{outline:3px solid var(--focus,#6b63b5);outline-offset:3px}
+@media(max-width:850px){.journey-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.questions-layout{grid-template-columns:1fr;gap:24px}}
+@media(max-width:520px){.journey-grid,.question-topic-grid{grid-template-columns:1fr}.journey-card{min-height:0}}
