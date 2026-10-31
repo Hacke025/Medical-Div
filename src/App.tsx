@@ -75,6 +75,9 @@ function App() {
   const [voiceStatus, setVoiceStatus] = useState("Tap the microphone, then say a command.");
   const recognitionRef = useRef<any>(null);
   const [glossaryQuery, setGlossaryQuery] = useState("");
+  const [questionTopics, setQuestionTopics] = useState<string[]>(["Understanding next steps"]);
+  const [questionNotes, setQuestionNotes] = useState("");
+  const [questionsCopied, setQuestionsCopied] = useState(false);
   const [completedTasks, setCompletedTasks] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem("careway-checklist") || "[]"); } catch { return []; }
   });
@@ -263,6 +266,30 @@ function App() {
     });
   }
 
+  const questionBank: Record<string, string[]> = {
+    "Understanding next steps": ["What happens after today?", "Could you explain the next steps in order?", "Who should I contact if I have questions later?"],
+    "Communication": ["Could I receive the instructions in writing?", "What communication options are available if I need clarification?"],
+    "Accessibility": ["What accessibility arrangements can be made for this visit?", "Can you tell me about accessible check-in and waiting options?"],
+    "Costs and coverage": ["Could someone explain the expected costs before I make a decision?", "Who can help me understand what my plan may cover?"],
+    "Forms and paperwork": ["Can I review or complete forms in an accessible format before the visit?", "Could you explain any section I am unsure about?"],
+    "Follow-up": ["How and when should I expect follow-up information?", "What is the best way to contact the office after this visit?"],
+  };
+  const suggestedQuestions = questionTopics.flatMap((topic) => questionBank[topic] || []);
+  async function copyQuestionList() {
+    const content = "Questions I may want to ask\\n\\n" + suggestedQuestions.map((q) => "• " + q).join("\\n") + (questionNotes.trim() ? "\\n\\nMy note: " + questionNotes.trim() : "");
+    try {
+      await navigator.clipboard.writeText(content);
+      setQuestionsCopied(true);
+      setAnnouncement("Your question list was copied. Review it and remove anything you do not want to share.");
+    } catch {
+      setAnnouncement("Copy is unavailable in this browser. You can select the questions and copy them manually.");
+    }
+  }
+  function toggleQuestionTopic(topic: string) {
+    setQuestionTopics((current) => current.includes(topic) ? current.filter((item) => item !== topic) : [...current, topic]);
+    setQuestionsCopied(false);
+  }
+
   function submitDemoForm(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormSubmitted(true);
@@ -301,6 +328,7 @@ function App() {
             <a href="#prepare" onClick={() => setMenuOpen(false)}>Prepare for a visit</a>
             <a href="#profile" onClick={() => setMenuOpen(false)}>My access profile</a>
             <a href="#checklist" onClick={() => setMenuOpen(false)}>Appointment checklist</a>
+            <a href="#questions" onClick={() => setMenuOpen(false)}>Question builder</a>
             <a href="#glossary" onClick={() => setMenuOpen(false)}>Healthcare glossary</a>
             <a href="#about" onClick={() => setMenuOpen(false)}>About</a>
             <button className="nav-accessibility" onClick={() => setSettingsOpen(true)}><Accessibility size={17} /> Accessibility</button>
@@ -444,6 +472,32 @@ function App() {
               <button className="button button-secondary request-copy" type="button" onClick={copyAccessRequest}><Copy size={15}/> Copy sample accommodation request</button>
               {profileSaved && <p className="saved-message" role="status">Saved in this browser. You can edit or clear it at any time.</p>}
             </form>
+          </div>
+        </section>
+
+        <section className="journey-section section-pad" id="journey">
+          <div className="container">
+            <div className="section-heading"><div><div className="eyebrow">ONE STEP AT A TIME</div><h2>Your care journey, made clearer.</h2><p>You can start wherever you are. Choose a step to jump to a practical tool.</p></div></div>
+            <div className="journey-grid">
+              <a className="journey-card" href="#resources"><span className="journey-number">01</span><b>Understand</b><p>Explore plain-language guides and common healthcare terms.</p><span>Explore resources <ArrowRight size={15}/></span></a>
+              <a className="journey-card" href="#profile"><span className="journey-number">02</span><b>Choose access options</b><p>Think about communication, sensory, mobility, and other preferences.</p><span>Build access profile <ArrowRight size={15}/></span></a>
+              <a className="journey-card" href="#questions"><span className="journey-number">03</span><b>Prepare</b><p>Create a question list and a simple appointment checklist.</p><span>Build questions <ArrowRight size={15}/></span></a>
+              <a className="journey-card" href="#prepare"><span className="journey-number">04</span><b>Take your next step</b><p>Use your plan to guide a conversation with the healthcare office.</p><span>Start planning <ArrowRight size={15}/></span></a>
+            </div>
+          </div>
+        </section>
+
+        <section className="questions-section section-pad" id="questions">
+          <div className="container questions-layout">
+            <div><div className="eyebrow">SPEAK UP WITH CONFIDENCE</div><h2>Build your appointment question list.</h2><p>Choose the topics that matter to you. Careway will suggest questions you can review, edit elsewhere, or take to an appointment. This is a preparation aid, not medical advice.</p><div className="profile-callout"><ShieldCheck size={18}/><span><b>You stay in control</b><br/>Nothing is sent to a provider. Avoid adding private medical details.</span></div></div>
+            <div className="demo-form-card question-builder">
+              <div className="form-card-heading"><span className="form-icon"><BookOpen size={20}/></span><div><h3>What would you like to ask about?</h3><p>Select one or more topics</p></div></div>
+              <div className="question-topic-grid">{Object.keys(questionBank).map((topic) => <label className="question-topic" key={topic}><input type="checkbox" checked={questionTopics.includes(topic)} onChange={() => toggleQuestionTopic(topic)}/><span>{topic}</span></label>)}</div>
+              <div className="suggested-questions" aria-live="polite"><h4>Your suggested questions ({suggestedQuestions.length})</h4>{suggestedQuestions.length ? <ul>{suggestedQuestions.map((question) => <li key={question}>{question}</li>)}</ul> : <p>Select a topic to see suggested questions.</p>}</div>
+              <label htmlFor="question-notes">Personal reminder <span>(optional; keep it non-sensitive)</span></label>
+              <textarea id="question-notes" rows={2} maxLength={180} value={questionNotes} onChange={(event) => {setQuestionNotes(event.target.value); setQuestionsCopied(false);}} placeholder="Example: Ask for a printed summary."/>
+              <button className="button button-primary form-submit" type="button" disabled={!suggestedQuestions.length} onClick={copyQuestionList}><Copy size={16}/>{questionsCopied ? "Copied — review before sharing" : "Copy my question list"}</button>
+            </div>
           </div>
         </section>
 
