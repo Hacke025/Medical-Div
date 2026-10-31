@@ -109,13 +109,13 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!settingsOpen && !voiceOpen) return;
+    if (!settingsOpen && !voiceOpen && !menuOpen) return;
     function handleEscape(event: KeyboardEvent) {
       if (event.key === "Escape") { setSettingsOpen(false); setVoiceOpen(false); stopVoiceRecognition(); }
     }
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
-  }, [settingsOpen, voiceOpen]);
+  }, [settingsOpen, voiceOpen, menuOpen]);
 
   function saveProfile(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
