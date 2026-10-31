@@ -781,14 +781,21 @@ function App() {
                 <div className="pack-block"><h3>{packLanguage === "es" ? "Preferencias de comunicación y acceso" : "Communication and access preferences"}</h3><p><b>{packLanguage === "es" ? "Comunicación:" : "Communication:"}</b> {profile.communication}</p><p><b>{packLanguage === "es" ? "Formato de la cita:" : "Visit format:"}</b> {profile.visitFormat}</p><p><b>{packLanguage === "es" ? "Apoyos que podrían ayudar:" : "Supports that may help:"}</b> {(profile.accessNeeds || []).join(", ") || (packLanguage === "es" ? "No se seleccionaron preferencias" : "No preferences selected")}</p><p><b>{packLanguage === "es" ? "Nota:" : "Note:"}</b> {profile.accommodation || (packLanguage === "es" ? "Ninguna" : "None")}</p></div>
               </div>
               <div className="pack-block pack-questions"><h3>{packLanguage === "es" ? "Preguntas que quiero hacer" : "Questions I may want to ask"}</h3>
-                {suggestedQuestions.length ? <ol>{(packLanguage === "es" ? [
-                  "¿Qué sucederá después de hoy?","¿Podría explicar los próximos pasos en orden?","¿Con quién debo comunicarme si tengo preguntas más adelante?",
-                  "¿Podría recibir las instrucciones por escrito?","¿Qué opciones de comunicación hay si necesito una aclaración?",
-                  "¿Qué apoyos de accesibilidad pueden ofrecer para esta cita?","¿Hay opciones accesibles para registrarme y esperar?",
-                  "¿Podría alguien explicar los costos previstos antes de que tome una decisión?","¿Quién puede ayudarme a entender qué podría cubrir mi plan?",
-                  "¿Puedo revisar o completar los formularios en un formato accesible antes de la cita?","¿Podría explicar cualquier sección que no entienda?",
-                  "¿Cómo y cuándo recibiré la información de seguimiento?","¿Cuál es la mejor manera de comunicarme con la oficina después de esta cita?"
-                ] : suggestedQuestions).map((q, i) => <li key={i}>{q}</li>)}</ol> : <p>{packLanguage === "es" ? "Selecciona temas en el creador de preguntas para añadir preguntas." : "Select topics in the question builder to add questions."}</p>}
+                {suggestedQuestions.length ? <ol>{(packLanguage === "es" ? suggestedQuestions.map((q) => ({
+                  "What happens after today?":"¿Qué sucederá después de hoy?",
+                  "Could you explain the next steps in order?":"¿Podría explicar los próximos pasos en orden?",
+                  "Who should I contact if I have questions later?":"¿Con quién debo comunicarme si tengo preguntas más adelante?",
+                  "Could I receive the instructions in writing?":"¿Podría recibir las instrucciones por escrito?",
+                  "What communication options are available if I need clarification?":"¿Qué opciones de comunicación hay si necesito una aclaración?",
+                  "What accessibility arrangements can be made for this visit?":"¿Qué apoyos de accesibilidad pueden ofrecer para esta cita?",
+                  "Can you tell me about accessible check-in and waiting options?":"¿Hay opciones accesibles para registrarme y esperar?",
+                  "Could someone explain the expected costs before I make a decision?":"¿Podría alguien explicar los costos previstos antes de que tome una decisión?",
+                  "Who can help me understand what my plan may cover?":"¿Quién puede ayudarme a entender qué podría cubrir mi plan?",
+                  "Can I review or complete forms in an accessible format before the visit?":"¿Puedo revisar o completar los formularios en un formato accesible antes de la cita?",
+                  "Could you explain any section I am unsure about?":"¿Podría explicar cualquier sección que no entienda?",
+                  "How and when should I expect follow-up information?":"¿Cómo y cuándo recibiré la información de seguimiento?",
+                  "What is the best way to contact the office after this visit?":"¿Cuál es la mejor manera de comunicarme con la oficina después de esta cita?"
+                } as Record<string,string>)[q] || q) : suggestedQuestions).map((q, i) => <li key={i}>{q}</li>)}</ol> : <p>{packLanguage === "es" ? "Selecciona temas en el creador de preguntas para añadir preguntas." : "Select topics in the question builder to add questions."}</p>}
               </div>
               <div className="pack-block"><h3>{packLanguage === "es" ? "Lista de preparación" : "Preparation checklist"}</h3><ul>{(packLanguage === "es" ? [
                 "Anotar las preguntas principales que quiero hacer","Verificar la hora, el lugar y el transporte de la cita","Preguntar por las opciones de accesibilidad que podría necesitar","Verificar si puedo completar los formularios con anticipación","Preparar los temas que quiero conversar (sin guardar datos sensibles aquí)","Preguntar cómo recibir instrucciones de seguimiento en un formato accesible"
