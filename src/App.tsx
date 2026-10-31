@@ -91,7 +91,7 @@ function App() {
   useEffect(() => {
     if (!settingsOpen && !voiceOpen) return;
     function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") { setSettingsOpen(false); setVoiceOpen(false); }
+      if (event.key === "Escape") { setSettingsOpen(false); setVoiceOpen(false); stopVoiceRecognition(); }
     }
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
@@ -447,9 +447,9 @@ function App() {
 
       <button className="floating-accessibility" onClick={() => setSettingsOpen(true)} aria-label="Open accessibility settings"><Accessibility size={23} /><span>Accessibility</span></button>
       <button className="floating-voice" onClick={() => setVoiceOpen(!voiceOpen)} aria-label={voiceOpen ? "Close voice assistant" : "Open voice assistant"} title="Talk to Careway"><Mic size={21} /></button>
-      {voiceOpen && <div className="voice-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setVoiceOpen(false); }}>
+      {voiceOpen && <div className="voice-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) { setVoiceOpen(false); stopVoiceRecognition(); } }}>
         <section className="voice-panel" role="dialog" aria-modal="false" aria-labelledby="voice-title">
-          <div className="settings-header"><div><div className="eyebrow">HANDS-FREE NAVIGATION</div><h2 id="voice-title">Talk to Careway</h2></div><button className="icon-button" onClick={() => setVoiceOpen(false)} aria-label="Close voice commands"><X /></button></div>
+          <div className="settings-header"><div><div className="eyebrow">HANDS-FREE NAVIGATION</div><h2 id="voice-title">Talk to Careway</h2></div><button className="icon-button" onClick={() => { setVoiceOpen(false); stopVoiceRecognition(); }} aria-label="Close voice commands"><X /></button></div>
           <p className="settings-intro">Tap once to speak a short command. You can also use the quick actions below. Your browser may process voice input using its speech service.</p>
           <div className="voice-status" role="status" aria-live="polite"><span className={voiceListening ? "voice-pulse active" : "voice-pulse"}><Mic size={20} /></span><div><b>{voiceListening ? "Listening now..." : "Voice assistant"}</b><small>{voiceStatus}</small></div></div>
           {voiceTranscript && <p className="voice-transcript"><b>Heard:</b> “{voiceTranscript}”</p>}
